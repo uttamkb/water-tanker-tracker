@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Android: Start Emulator (Pixel_6)",
+      "type": "shell",
+      "command": "${env:HOME}/Library/Android/sdk/emulator/emulator",
+      "args": [
+        "-avd",
+        "Pixel_6"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Build Debug APK",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": [
+        ":app:assembleDebug"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Install Debug APK",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": [
+        ":app:installDebug"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Launch App",
+      "type": "shell",
+      "command": "${env:HOME}/Library/Android/sdk/platform-tools/adb",
+      "args": [
+        "shell",
+        "am",
+        "start",
+        "-n",
+        "finsight.apartment.watertracker/com.apartment.watertracker.MainActivity"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Build + Install + Launch",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Android: Build Debug APK",
+        "Android: Install Debug APK",
+        "Android: Launch App"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

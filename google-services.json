@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "522236690179",
+    "project_id": "finsight-water-tanker-tracker",
+    "storage_bucket": "finsight-water-tanker-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522236690179:android:3c91b500e7d03e19d8b336",
+        "android_client_info": {
+          "package_name": "finsight.apartment.watertracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522236690179-30rnpjkugii4ajh3nmal6rplnhgohpjs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "finsight.apartment.watertracker",
+            "certificate_hash": "d475cfdbbd354dbc92dc7a6d01efaa9cc56885fd"
+          }
+        },
+        {
+          "client_id": "522236690179-dei6pqfqt35qsmahbu3pi2a13r5aoa6b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDGpymia5Q1dp6XsamcXC6kENaXQI757Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "522236690179-dei6pqfqt35qsmahbu3pi2a13r5aoa6b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

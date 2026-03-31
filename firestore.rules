@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDocPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function userExists() {
+      return signedIn() && exists(userDocPath());
+    }
+
+    function userData() {
+      return get(userDocPath()).data;
+    }
+
+    function userApartmentId() {
+      return userData().apartmentId;
+    }
+
+    function userRole() {
+      return userData().role;
+    }
+
+    function isApartmentMember(apartmentId) {
+      return userExists() && userApartmentId() == apartmentId;
+    }
+
+    function isApartmentAdmin(apartmentId) {
+      return isApartmentMember(apartmentId) && userRole() == "ADMIN";
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn()
+        && (
+          request.auth.uid == userId
+          || isApartmentAdmin(resource.data.apartmentId)
+        );
+
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          "name",
+          "email",
+          "role",
+          "apartmentId",
+          "apartmentName"
+        ])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == "ADMIN"
+        && request.resource.data.apartmentId == request.auth.uid;
+
+      allow update: if signedIn()
+        && (
+          (
+            request.auth.uid == userId
+            && resource.data.apartmentId == request.resource.data.apartmentId
+            && resource.data.role == request.resource.data.role
+            && resource.data.email == request.resource.data.email
+          ) || (
+            isApartmentAdmin(resource.data.apartmentId)
+            && resource.data.apartmentId == request.resource.data.apartmentId
+            && request.resource.data.keys().hasOnly([
+              "name",
+              "email",
+              "role",
+              "apartmentId",
+              "apartmentName"
+            ])
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    match /apartments/{apartmentId} {
+      allow read: if isApartmentMember(apartmentId);
+
+      allow create: if signedIn()
+        && request.auth.uid == apartmentId
+        && request.resource.data.apartmentId == apartmentId
+        && request.resource.data.createdByUserId == request.auth.uid;
+
+      allow update: if isApartmentAdmin(apartmentId);
+      allow delete: if false;
+
+      match /vendors/{vendorId} {
+        allow read: if isApartmentMember(apartmentId);
+        allow create, update: if isApartmentAdmin(apartmentId)
+          && request.resource.data.apartmentId == apartmentId;
+        allow delete: if isApartmentAdmin(apartmentId);
+      }
+
+      match /operator_invites/{inviteId} {
+        allow read: if isApartmentAdmin(apartmentId);
+        allow create, update: if isApartmentAdmin(apartmentId)
+          && request.resource.data.apartmentId == apartmentId;
+        allow delete: if isApartmentAdmin(apartmentId);
+      }
+
+      match /supply_entries/{entryId} {
+        allow read: if isApartmentMember(apartmentId);
+
+        allow create: if isApartmentMember(apartmentId)
+          && request.resource.data.apartmentId == apartmentId
+          && request.resource.data.createdByUserId == request.auth.uid;
+
+        allow update: if isApartmentAdmin(apartmentId)
+          && request.resource.data.apartmentId == apartmentId;
+
+        allow delete: if isApartmentAdmin(apartmentId);
+      }
+    }
+  }
+}
