@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FlashlightOff
 import androidx.compose.material.icons.outlined.FlashlightOn
@@ -108,16 +107,17 @@ fun ScanScreen(
             }
             item {
                 Card(
-                    shape = RoundedCornerShape(18.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                     ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(320.dp)
-                            .padding(10.dp),
+                            .padding(14.dp),
                     ) {
                         if (hasCameraPermission) {
                             CameraQrScannerView(
@@ -149,19 +149,21 @@ fun ScanScreen(
             }
             item {
                 Card(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Text(
                         text = when {
-                        uiState.isResolvingScan -> "Resolving scanned QR..."
-                        uiState.lastScannedQrValue != null -> "Last scanned QR: ${uiState.lastScannedQrValue}"
-                        else -> "Scanner ready"
+                            uiState.isResolvingScan -> "Resolving scanned QR..."
+                            uiState.lastScannedQrValue != null -> "Last scanned QR: ${uiState.lastScannedQrValue}"
+                            else -> "Scanner ready"
                         },
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -169,27 +171,29 @@ fun ScanScreen(
                 item {
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
                         ),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .padding(18.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(22.dp),
                                 strokeWidth = 3.dp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Column {
-                                Text("Opening entry form…", style = MaterialTheme.typography.titleMedium)
+                                Text("Opening entry form…", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                 Text(
                                     text = "Hold steady, we’ll auto-open when resolved.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                                 )
                             }
                         }
@@ -200,16 +204,18 @@ fun ScanScreen(
                 item {
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
                         ),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             Text(
                                 text = errorMessage,
-                                color = MaterialTheme.colorScheme.error,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                             Button(onClick = viewModel::clearScanError) {
@@ -220,6 +226,7 @@ fun ScanScreen(
                 }
             }
             item {
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Manual fallback",
                     style = MaterialTheme.typography.titleMedium,
@@ -232,7 +239,7 @@ fun ScanScreen(
                     label = { Text("Enter QR text") },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(onClick = viewModel::submitManualQr) {
                         Text("Submit QR")
@@ -247,10 +254,10 @@ fun ScanScreen(
                     }
                 }
             }
-            item { HorizontalDivider(color = DividerDefaults.color.copy(alpha = 0.4f)) }
+            item { HorizontalDivider(color = DividerDefaults.color.copy(alpha = 0.4f), modifier = Modifier.padding(vertical = 12.dp)) }
             items(uiState.vendors, key = { it.id }) { vendor ->
                 Button(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     onClick = { viewModel.onQrScanned(vendor.qrValue) },
                 ) {
                     Text(text = "Use ${vendor.supplierName}")

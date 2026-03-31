@@ -1,10 +1,12 @@
 package com.apartment.watertracker.core.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -93,7 +95,9 @@ fun WaterTrackerNavHost() {
         bottomBar = {
             val currentRoute = currentDestination?.route
             if (currentRoute in primaryRoutes && subscriptionState.isActive) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ) {
                     primaryItems.forEach { item ->
                         val selected = currentDestination
                             ?.hierarchy
@@ -117,7 +121,7 @@ fun WaterTrackerNavHost() {
         NavHost(
             navController = navController,
             startDestination = AppDestination.Login.route,
-            modifier = Modifier,
+            modifier = Modifier.padding(innerPadding),
         ) {
             composable(AppDestination.Login.route) {
                 LoginScreen(

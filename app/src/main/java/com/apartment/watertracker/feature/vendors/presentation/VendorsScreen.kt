@@ -64,18 +64,20 @@ fun VendorsScreen(
         ) {
             item {
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 ) {
                     Column(
-                        modifier = Modifier.padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
                             text = "Register vendor",
                             style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         OutlinedTextField(
                             value = uiState.supplierName,
@@ -145,13 +147,14 @@ private fun VendorCard(
     onDelete: () -> Unit,
 ) {
     Card(
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
@@ -167,6 +170,7 @@ private fun VendorCard(
                         text = vendor.supplierName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     vendor.contactPerson?.takeIf { it.isNotBlank() }?.let {
                         Text(
@@ -199,6 +203,7 @@ private fun VendorCard(
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             vendor.notes?.takeIf { it.isNotBlank() }?.let {
@@ -209,7 +214,7 @@ private fun VendorCard(
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Button(
@@ -227,14 +232,14 @@ private fun VendorCard(
 private fun StatusChip(isActive: Boolean) {
     val label = if (isActive) "Active" else "Inactive"
     val bg = if (isActive) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        MaterialTheme.colorScheme.primaryContainer
     } else {
-        MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+        MaterialTheme.colorScheme.errorContainer
     }
     val fg = if (isActive) {
-        MaterialTheme.colorScheme.primary
+        MaterialTheme.colorScheme.onPrimaryContainer
     } else {
-        MaterialTheme.colorScheme.error
+        MaterialTheme.colorScheme.onErrorContainer
     }
     Text(
         text = label,
@@ -242,6 +247,6 @@ private fun StatusChip(isActive: Boolean) {
             .background(color = bg, shape = RoundedCornerShape(999.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp),
         color = fg,
-        style = MaterialTheme.typography.labelLarge,
+        style = MaterialTheme.typography.labelMedium,
     )
 }

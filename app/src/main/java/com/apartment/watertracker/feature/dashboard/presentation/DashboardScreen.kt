@@ -92,7 +92,7 @@ fun DashboardScreen(
             onClick = onTeamClick,
         ),
         DashboardAction(
-            title = "All Apartments (Owner)",
+            title = "All Apartments",
             subtitle = "Owner-level control of subscriptions",
             icon = Icons.Outlined.Assessment,
             onClick = onApartmentAdminClick,
@@ -125,9 +125,10 @@ fun DashboardScreen(
                 item {
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
                         ),
-                        shape = RoundedCornerShape(18.dp),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -136,11 +137,12 @@ fun DashboardScreen(
                             Text(
                                 text = "Subscription inactive",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.error,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                             )
                             Text(
                                 text = "Access is blocked for this apartment. Please renew or switch to an active apartment.",
                                 style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                             )
                             Button(
                                 modifier = Modifier.fillMaxWidth(),
@@ -184,37 +186,30 @@ private fun HeroPanel(
     userRole: UserRole,
 ) {
     Card(
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.85f),
-                        ),
-                    ),
-                )
                 .padding(22.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = "Welcome back, $userName",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = apartmentName,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.92f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Box(
                     modifier = Modifier
                         .background(
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(999.dp),
                         )
                         .padding(horizontal = 12.dp, vertical = 6.dp),
@@ -267,18 +262,20 @@ private fun StatCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = label,
@@ -330,10 +327,11 @@ private fun ActionCard(action: DashboardAction) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = action.onClick),
-        shape = RoundedCornerShape(22.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.58f),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -344,24 +342,25 @@ private fun ActionCard(action: DashboardAction) {
                     .width(44.dp)
                     .height(44.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = MaterialTheme.shapes.large,
                     ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = action.icon,
                     contentDescription = action.title,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
             }
             Text(
                 text = action.title,
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = action.subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -382,5 +381,5 @@ private fun UserRole.displayLabel(): String = when (this) {
 
 private fun gridHeightFor(itemCount: Int): androidx.compose.ui.unit.Dp {
     val rows = ((itemCount - 1) / 2) + 1
-    return (rows * 170).dp
+    return (rows * 174).dp
 }
