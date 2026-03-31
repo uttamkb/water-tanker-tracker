@@ -26,4 +26,10 @@ interface VendorDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(vendors: List<VendorEntity>)
+
+    @Query("DELETE FROM vendors WHERE id = :vendorId")
+    suspend fun deleteById(vendorId: String)
+
+    @Query("DELETE FROM vendors")
+    suspend fun deleteAll()
 }

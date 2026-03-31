@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -22,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,6 +38,7 @@ import com.apartment.watertracker.domain.model.Vendor
 
 @Composable
 fun VendorsScreen(
+    onBackClick: (() -> Unit)? = null,
     viewModel: VendorsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -45,12 +51,15 @@ fun VendorsScreen(
         }
     }
 
-    PrimaryScaffold(title = "Vendors") { paddingValues ->
+    PrimaryScaffold(
+        title = "Vendors",
+        onBackClick = onBackClick
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
@@ -106,12 +115,14 @@ fun VendorsScreen(
                 Text(
                     text = "Registered vendors",
                     style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
             items(uiState.vendors, key = { it.id }) { vendor ->
                 VendorCard(
                     vendor = vendor,
                     onShowQr = { selectedVendorForQr = vendor },
+                    onDelete = { viewModel.deleteVendor(vendor.id) }
                 )
             }
         }
@@ -131,6 +142,7 @@ fun VendorsScreen(
 private fun VendorCard(
     vendor: Vendor,
     onShowQr: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(18.dp),
@@ -145,8 +157,12 @@ private fun VendorCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
                     Text(
                         text = vendor.supplierName,
                         style = MaterialTheme.typography.titleMedium,
@@ -165,7 +181,19 @@ private fun VendorCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                StatusChip(isActive = vendor.isActive)
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    StatusChip(isActive = vendor.isActive)
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Delete Vendor",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             }
             vendor.address?.takeIf { it.isNotBlank() }?.let {
                 Text(

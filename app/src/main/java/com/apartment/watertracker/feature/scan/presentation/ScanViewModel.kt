@@ -35,7 +35,6 @@ class ScanViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            vendorRepository.seedDemoVendorsIfEmpty()
             vendorRepository.refreshVendors()
             vendorRepository.observeVendors().collect { vendors ->
                 _uiState.update { it.copy(vendors = vendors.filter { vendor -> vendor.isActive }) }

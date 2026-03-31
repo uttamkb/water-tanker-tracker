@@ -8,6 +8,6 @@ interface VendorRepository {
     fun observeVendor(vendorId: String): Flow<Vendor?>
     suspend fun getVendorByQrValue(qrValue: String): Vendor?
     suspend fun saveVendor(vendor: Vendor)
+    suspend fun deleteVendor(vendorId: String)
     suspend fun refreshVendors()
-    suspend fun seedDemoVendorsIfEmpty()
 }

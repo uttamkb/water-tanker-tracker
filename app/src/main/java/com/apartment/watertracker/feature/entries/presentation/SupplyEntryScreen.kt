@@ -3,6 +3,7 @@ package com.apartment.watertracker.feature.entries.presentation
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -26,12 +27,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.apartment.watertracker.core.ui.components.PrimaryScaffold
+import com.apartment.watertracker.core.notifications.NotificationHelper
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun SupplyEntryScreen(
     onEntrySaved: () -> Unit,
+    onBackClick: (() -> Unit)? = null,
     viewModel: SupplyEntryViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -47,6 +50,22 @@ fun SupplyEntryScreen(
             viewModel.recaptureLocation()
         } else {
             viewModel.onLocationPermissionDenied()
+        }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 
@@ -68,7 +87,19 @@ fun SupplyEntryScreen(
         }
     }
 
-    PrimaryScaffold(title = "New Tanker Entry") { paddingValues ->
+    LaunchedEffect(uiState.duplicateWarning) {
+        val warning = uiState.duplicateWarning ?: return@LaunchedEffect
+        NotificationHelper.showDuplicateWarning(
+            context = context,
+            title = "Possible duplicate tanker entry",
+            message = "Previous entry at ${warning.previousCapturedAt}.",
+        )
+    }
+
+    PrimaryScaffold(
+        title = "New Tanker Entry",
+        onBackClick = onBackClick
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

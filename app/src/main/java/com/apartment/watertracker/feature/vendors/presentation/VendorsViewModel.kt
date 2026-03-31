@@ -36,7 +36,6 @@ class VendorsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            vendorRepository.seedDemoVendorsIfEmpty()
             vendorRepository.refreshVendors()
             vendorRepository.observeVendors().collect { vendors ->
                 _uiState.update { it.copy(vendors = vendors) }
@@ -88,6 +87,13 @@ class VendorsViewModel @Inject constructor(
                     saveMessage = "Vendor saved",
                 )
             }
+        }
+    }
+
+    fun deleteVendor(vendorId: String) {
+        viewModelScope.launch {
+            vendorRepository.deleteVendor(vendorId)
+            _uiState.update { it.copy(saveMessage = "Vendor deleted") }
         }
     }
 

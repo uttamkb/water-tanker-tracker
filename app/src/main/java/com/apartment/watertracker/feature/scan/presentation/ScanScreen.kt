@@ -52,6 +52,7 @@ import com.apartment.watertracker.core.ui.components.PrimaryScaffold
 @Composable
 fun ScanScreen(
     onVendorScanned: (String) -> Unit,
+    onBackClick: (() -> Unit)? = null,
     viewModel: ScanViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -81,7 +82,10 @@ fun ScanScreen(
         }
     }
 
-    PrimaryScaffold(title = "Scan Vendor QR") { paddingValues ->
+    PrimaryScaffold(
+        title = "Scan Vendor QR",
+        onBackClick = onBackClick
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

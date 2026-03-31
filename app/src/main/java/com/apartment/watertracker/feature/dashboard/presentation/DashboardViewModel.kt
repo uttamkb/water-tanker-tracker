@@ -40,7 +40,6 @@ class DashboardViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            vendorRepository.seedDemoVendorsIfEmpty()
             vendorRepository.refreshVendors()
             supplyEntryRepository.refreshTodayEntries()
             val now = LocalDate.now()

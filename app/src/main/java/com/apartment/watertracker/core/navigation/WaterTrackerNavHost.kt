@@ -38,8 +38,10 @@ fun WaterTrackerNavHost() {
     val currentDestination = navBackStackEntry?.destination
     val guardViewModel: SubscriptionGuardViewModel = hiltViewModel()
     val subscriptionState = guardViewModel.uiState.collectAsStateWithLifecycle().value
+    val roleViewModel: NavigationUserViewModel = hiltViewModel()
+    val roleState = roleViewModel.uiState.collectAsStateWithLifecycle().value
 
-    val primaryItems = listOf(
+    val allPrimaryItems = listOf(
         BottomNavItem(
             route = AppDestination.Dashboard.route,
             label = "Home",
@@ -61,6 +63,21 @@ fun WaterTrackerNavHost() {
             icon = Icons.Outlined.Assessment,
         ),
     )
+    val primaryItems = when (roleState.isOperator) {
+        true -> allPrimaryItems.filter { it.route != AppDestination.Vendors.route }
+        false -> allPrimaryItems
+    }
+
+    // Helper for top-level navigation (Bottom Nav & Dashboard cards)
+    val navigateToTopLevel = { route: String ->
+        navController.navigate(route) {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo(AppDestination.Dashboard.route) {
+                saveState = true
+            }
+        }
+    }
 
     LaunchedEffect(subscriptionState.isActive, currentDestination?.route) {
         val currentRoute = currentDestination?.route
@@ -83,15 +100,7 @@ fun WaterTrackerNavHost() {
                             ?.any { it.route == item.route } == true
                         NavigationBarItem(
                             selected = selected,
-                            onClick = {
-                                navController.navigate(item.route) {
-                                    launchSingleTop = true
-                                    restoreState = true
-                                    popUpTo(AppDestination.Dashboard.route) {
-                                        saveState = true
-                                    }
-                                }
-                            },
+                            onClick = { navigateToTopLevel(item.route) },
                             icon = {
                                 androidx.compose.material3.Icon(
                                     imageVector = item.icon,
@@ -122,9 +131,9 @@ fun WaterTrackerNavHost() {
 
             composable(AppDestination.Dashboard.route) {
                 DashboardScreen(
-                    onScanClick = { navController.navigate(AppDestination.Scan.route) },
-                    onVendorsClick = { navController.navigate(AppDestination.Vendors.route) },
-                    onReportsClick = { navController.navigate(AppDestination.Reports.route) },
+                    onScanClick = { navigateToTopLevel(AppDestination.Scan.route) },
+                    onVendorsClick = { navigateToTopLevel(AppDestination.Vendors.route) },
+                    onReportsClick = { navigateToTopLevel(AppDestination.Reports.route) },
                     onApartmentSetupClick = { navController.navigate(AppDestination.ApartmentSetup.route) },
                     onApartmentSwitchClick = { navController.navigate(AppDestination.ApartmentSwitch.route) },
                     onApartmentAdminClick = { navController.navigate(AppDestination.ApartmentAdmin.route) },
@@ -148,7 +157,9 @@ fun WaterTrackerNavHost() {
             }
 
             composable(AppDestination.Vendors.route) {
-                VendorsScreen()
+                VendorsScreen(
+                    onBackClick = { navigateToTopLevel(AppDestination.Dashboard.route) }
+                )
             }
 
             composable(AppDestination.Scan.route) {
@@ -156,6 +167,7 @@ fun WaterTrackerNavHost() {
                     onVendorScanned = { vendorId ->
                         navController.navigate(AppDestination.SupplyEntry.createRoute(vendorId))
                     },
+                    onBackClick = { navigateToTopLevel(AppDestination.Dashboard.route) }
                 )
             }
 
@@ -166,11 +178,16 @@ fun WaterTrackerNavHost() {
                             popUpTo(AppDestination.Dashboard.route)
                         }
                     },
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
                 )
             }
 
             composable(AppDestination.Reports.route) {
-                ReportsScreen()
+                ReportsScreen(
+                    onBackClick = { navigateToTopLevel(AppDestination.Dashboard.route) }
+                )
             }
         }
     }

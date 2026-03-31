@@ -20,11 +20,15 @@ import com.apartment.watertracker.core.ui.components.PrimaryScaffold
 
 @Composable
 fun ReportsScreen(
+    onBackClick: (() -> Unit)? = null,
     viewModel: ReportsViewModel = hiltViewModel(),
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
 
-    PrimaryScaffold(title = "Reports") { paddingValues ->
+    PrimaryScaffold(
+        title = "Reports",
+        onBackClick = onBackClick
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
