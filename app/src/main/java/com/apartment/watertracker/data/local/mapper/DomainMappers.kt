@@ -17,6 +17,7 @@ fun VendorEntity.toDomain(): Vendor = Vendor(
     notes = notes,
     isActive = isActive,
     qrValue = qrValue,
+    defaultCapacityLiters = defaultCapacityLiters,
 )
 
 fun Vendor.toEntity(): VendorEntity = VendorEntity(
@@ -30,6 +31,7 @@ fun Vendor.toEntity(): VendorEntity = VendorEntity(
     notes = notes,
     isActive = isActive,
     qrValue = qrValue,
+    defaultCapacityLiters = defaultCapacityLiters,
 )
 
 fun SupplyEntryEntity.toDomain(): SupplyEntry = SupplyEntry(
@@ -37,6 +39,12 @@ fun SupplyEntryEntity.toDomain(): SupplyEntry = SupplyEntry(
     apartmentId = apartmentId,
     vendorId = vendorId,
     hardnessPpm = hardnessPpm,
+    phLevel = phLevel,
+    tdsPpm = tdsPpm,
+    volumeLiters = volumeLiters,
+    qualityRating = qualityRating,
+    timelinessRating = timelinessRating,
+    hygieneRating = hygieneRating,
     capturedAt = Instant.ofEpochMilli(capturedAtEpochMillis),
     latitude = latitude,
     longitude = longitude,
@@ -47,6 +55,7 @@ fun SupplyEntryEntity.toDomain(): SupplyEntry = SupplyEntry(
     duplicateFlag = duplicateFlag,
     duplicateReferenceId = duplicateReferenceId,
     createdByUserId = createdByUserId,
+    isSynced = isSynced,
 )
 
 fun SupplyEntry.toEntity(): SupplyEntryEntity = SupplyEntryEntity(
@@ -54,6 +63,12 @@ fun SupplyEntry.toEntity(): SupplyEntryEntity = SupplyEntryEntity(
     apartmentId = apartmentId,
     vendorId = vendorId,
     hardnessPpm = hardnessPpm,
+    phLevel = phLevel,
+    tdsPpm = tdsPpm,
+    volumeLiters = volumeLiters,
+    qualityRating = qualityRating,
+    timelinessRating = timelinessRating,
+    hygieneRating = hygieneRating,
     capturedAtEpochMillis = capturedAt.toEpochMilli(),
     latitude = latitude,
     longitude = longitude,
@@ -64,4 +79,5 @@ fun SupplyEntry.toEntity(): SupplyEntryEntity = SupplyEntryEntity(
     duplicateFlag = duplicateFlag,
     duplicateReferenceId = duplicateReferenceId,
     createdByUserId = createdByUserId,
+    isSynced = isSynced,
 )

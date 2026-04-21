@@ -8,4 +8,5 @@ interface AuthRepository {
     val currentUser: Flow<AppUser?>
     suspend fun signInWithGoogle(activity: Activity)
     suspend fun signOut()
+    suspend fun registerFcmToken(token: String)
 }

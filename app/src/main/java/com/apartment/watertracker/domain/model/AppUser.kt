@@ -7,4 +7,5 @@ data class AppUser(
     val role: UserRole,
     val apartmentId: String,
     val apartmentName: String?,
+    val fcmTokens: List<String> = emptyList(),
 )

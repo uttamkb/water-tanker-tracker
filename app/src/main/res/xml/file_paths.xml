@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <cache-path
-        name="shared_qr"
-        path="shared/" />
-    <cache-path
-        name="reports"
-        path="reports/" />
+    <cache-path name="cache" path="." />
 </paths>

@@ -10,4 +10,5 @@ data class FirestoreVendorDto(
     val notes: String? = null,
     val isActive: Boolean = true,
     val qrValue: String = "",
+    val defaultCapacityLiters: Int = 5000,
 )

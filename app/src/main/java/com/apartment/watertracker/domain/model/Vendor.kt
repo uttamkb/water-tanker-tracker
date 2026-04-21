@@ -1,5 +1,15 @@
 package com.apartment.watertracker.domain.model
 
+data class VendorRating(
+    val avgQuality: Float,
+    val avgTimeliness: Float,
+    val avgHygiene: Float,
+    val totalRatings: Int
+) {
+    val overallRating: Float
+        get() = (avgQuality + avgTimeliness + avgHygiene) / 3f
+}
+
 data class Vendor(
     val id: String,
     val apartmentId: String,
@@ -11,4 +21,5 @@ data class Vendor(
     val notes: String?,
     val isActive: Boolean,
     val qrValue: String,
+    val defaultCapacityLiters: Int = 5000,
 )

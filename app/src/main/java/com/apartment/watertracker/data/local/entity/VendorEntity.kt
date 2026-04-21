@@ -15,4 +15,5 @@ data class VendorEntity(
     val notes: String?,
     val isActive: Boolean,
     val qrValue: String,
+    val defaultCapacityLiters: Int = 5000,
 )

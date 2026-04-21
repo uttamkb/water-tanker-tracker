@@ -8,13 +8,23 @@ import com.apartment.watertracker.data.local.dao.VendorDao
 import com.apartment.watertracker.data.repository.FirestoreApartmentRepository
 import com.apartment.watertracker.data.repository.AndroidLocationRepository
 import com.apartment.watertracker.data.repository.FirebaseAuthRepository
+import com.apartment.watertracker.data.repository.OfflineFirstDeliveryRepository
 import com.apartment.watertracker.data.repository.OfflineFirstSupplyEntryRepository
 import com.apartment.watertracker.data.repository.OfflineFirstVendorRepository
+import com.apartment.watertracker.data.repository.FirestoreBidRepository
+import com.apartment.watertracker.data.repository.FirestoreInvoiceRepository
+import com.apartment.watertracker.data.repository.FirestoreTankerRequestRepository
+import com.apartment.watertracker.domain.repository.BidRepository
+import com.apartment.watertracker.domain.repository.InvoiceRepository
+import com.apartment.watertracker.domain.repository.TankerRequestRepository
+import com.apartment.watertracker.data.sync.WorkManagerSyncManager
 import com.apartment.watertracker.domain.repository.AuthRepository
 import com.apartment.watertracker.domain.repository.ApartmentRepository
+import com.apartment.watertracker.domain.repository.DeliveryRepository
 import com.apartment.watertracker.domain.repository.LocationRepository
 import com.apartment.watertracker.domain.repository.SupplyEntryRepository
 import com.apartment.watertracker.domain.repository.VendorRepository
+import com.apartment.watertracker.domain.sync.SyncManager
 import com.apartment.watertracker.domain.usecase.CheckDuplicateEntryUseCase
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
@@ -44,6 +54,9 @@ object DatabaseModule {
 
     @Provides
     fun provideVendorDao(database: WaterTrackerDatabase): VendorDao = database.vendorDao()
+
+    @Provides
+    fun provideDeliveryDao(database: WaterTrackerDatabase) = database.deliveryDao()
 
     @Provides
     fun provideSupplyEntryDao(database: WaterTrackerDatabase): SupplyEntryDao = database.supplyEntryDao()
@@ -79,8 +92,23 @@ abstract class RepositoryModule {
     abstract fun bindVendorRepository(repository: OfflineFirstVendorRepository): VendorRepository
 
     @Binds
+    abstract fun bindDeliveryRepository(repository: OfflineFirstDeliveryRepository): DeliveryRepository
+
+    @Binds
     abstract fun bindSupplyEntryRepository(repository: OfflineFirstSupplyEntryRepository): SupplyEntryRepository
 
     @Binds
     abstract fun bindLocationRepository(repository: AndroidLocationRepository): LocationRepository
+
+    @Binds
+    abstract fun bindTankerRequestRepository(repository: FirestoreTankerRequestRepository): TankerRequestRepository
+
+    @Binds
+    abstract fun bindBidRepository(repository: FirestoreBidRepository): BidRepository
+
+    @Binds
+    abstract fun bindInvoiceRepository(repository: FirestoreInvoiceRepository): InvoiceRepository
+
+    @Binds
+    abstract fun bindSyncManager(manager: WorkManagerSyncManager): SyncManager
 }

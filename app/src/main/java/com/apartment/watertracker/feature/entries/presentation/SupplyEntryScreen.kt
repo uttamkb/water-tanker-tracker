@@ -8,11 +8,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -20,16 +22,32 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.apartment.watertracker.core.ui.components.PrimaryScaffold
+import com.apartment.watertracker.core.ui.components.PremiumCard
+import com.apartment.watertracker.core.ui.components.StarRating
 import com.apartment.watertracker.core.notifications.NotificationHelper
+import androidx.compose.material3.SnackbarHostState
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -42,6 +60,8 @@ fun SupplyEntryScreen(
     val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isAdvancedQualityExpanded by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { result ->
@@ -98,9 +118,16 @@ fun SupplyEntryScreen(
         )
     }
 
+    LaunchedEffect(uiState.locationError) {
+        uiState.locationError?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
+
     PrimaryScaffold(
         title = "New Tanker Entry",
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        snackbarHostState = snackbarHostState
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -109,20 +136,16 @@ fun SupplyEntryScreen(
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Card(
-                shape = MaterialTheme.shapes.extraLarge,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            PremiumCard(
+                containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = "Vendor: ${uiState.vendor?.supplierName ?: "Loading..."}",
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -149,10 +172,70 @@ fun SupplyEntryScreen(
                 }
             }
             OutlinedTextField(
-                value = uiState.hardnessInput,
-                onValueChange = viewModel::updateHardness,
-                label = { Text(text = "Water Hardness") },
+                value = uiState.tdsInput,
+                onValueChange = viewModel::updateTds,
+                label = { Text(text = "TDS Level (PPM)") },
                 modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            PremiumCard(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { isAdvancedQualityExpanded = !isAdvancedQualityExpanded }
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Advanced Quality Metrics (Optional)",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Icon(
+                            imageVector = if (isAdvancedQualityExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = "Expand",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    AnimatedVisibility(visible = isAdvancedQualityExpanded) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = uiState.hardnessInput,
+                                onValueChange = viewModel::updateHardness,
+                                label = { Text(text = "Water Hardness (PPM)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+                            OutlinedTextField(
+                                value = uiState.phInput,
+                                onValueChange = viewModel::updatePh,
+                                label = { Text(text = "pH Level") },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                        }
+                    }
+                }
+            }
+
+            OutlinedTextField(
+                value = uiState.volumeInput,
+                onValueChange = viewModel::updateVolume,
+                label = { Text(text = "Volume (Liters)") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             OutlinedTextField(
                 value = uiState.vehicleNumber,
@@ -166,6 +249,60 @@ fun SupplyEntryScreen(
                 label = { Text(text = "Remarks (Optional)") },
                 modifier = Modifier.fillMaxWidth(),
             )
+            
+            PremiumCard(
+                containerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Vendor Rating (Optional)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Text("Water Quality", style = MaterialTheme.typography.bodyMedium)
+                        StarRating(
+                            rating = uiState.qualityRating,
+                            onRatingChange = viewModel::updateQualityRating
+                        )
+                    }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Text("Timeliness", style = MaterialTheme.typography.bodyMedium)
+                        StarRating(
+                            rating = uiState.timelinessRating,
+                            onRatingChange = viewModel::updateTimelinessRating
+                        )
+                    }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Text("Vehicle Hygiene", style = MaterialTheme.typography.bodyMedium)
+                        StarRating(
+                            rating = uiState.hygieneRating,
+                            onRatingChange = viewModel::updateHygieneRating
+                        )
+                    }
+                }
+            }
+
             Text(
                 text = "Photo is optional and currently skipped to control storage cost.",
                 style = MaterialTheme.typography.bodySmall,
@@ -196,7 +333,7 @@ fun SupplyEntryScreen(
             Button(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 onClick = { viewModel.saveEntry() },
-                enabled = uiState.hardnessInput.isNotBlank() && uiState.location != null && !uiState.isSaving,
+                enabled = uiState.location != null && !uiState.isSaving,
             ) {
                 Text(text = if (uiState.isSaving) "Saving..." else "Save Entry")
             }

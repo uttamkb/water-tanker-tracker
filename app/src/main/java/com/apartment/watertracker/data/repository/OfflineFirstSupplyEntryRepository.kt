@@ -9,8 +9,10 @@ import com.apartment.watertracker.data.remote.model.FirestoreSupplyEntryDto
 import com.apartment.watertracker.data.remote.util.awaitResult
 import com.apartment.watertracker.data.tenant.ApartmentScopeProvider
 import com.apartment.watertracker.domain.model.SupplyEntry
+import com.apartment.watertracker.domain.model.VendorRating
 import com.apartment.watertracker.domain.repository.SupplyEntryRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -51,6 +53,29 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
             entries.map { it.toDomain() }
         }
     }
+    
+    override fun observeRecentEntries(limit: Int): Flow<List<SupplyEntry>> {
+        return supplyEntryDao.observeRecentEntries(limit).map { entries ->
+            entries.map { it.toDomain() }
+        }
+    }
+    
+    override fun observeEntryById(entryId: String): Flow<SupplyEntry?> {
+        return supplyEntryDao.observeById(entryId).map { it?.toDomain() }
+    }
+
+    override fun observeVendorRatings(): Flow<Map<String, VendorRating>> {
+        return supplyEntryDao.observeVendorRatings().map { list ->
+            list.associate { 
+                it.vendorId to VendorRating(
+                    avgQuality = it.avgQuality,
+                    avgTimeliness = it.avgTimeliness,
+                    avgHygiene = it.avgHygiene,
+                    totalRatings = it.count
+                )
+            }
+        }
+    }
 
     override suspend fun getLatestEntryForVendor(vendorId: String): SupplyEntry? =
         supplyEntryDao.getLatestForVendor(vendorId)?.toDomain()
@@ -75,14 +100,57 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
         val end = Instant.now().toEpochMilli()
         refreshEntriesInRange(start, end)
     }
-
-    override suspend fun saveEntry(entry: SupplyEntry) {
-        supplyEntryDao.upsert(entry.toLocalEntity())
+    
+    override suspend fun refreshRecentEntries(limit: Int) {
         val entriesCollection = entriesCollection()
         runCatching {
-            entriesCollection.document(entry.id)
-                .set(entry.toLocalEntity().toFirestoreDto())
+            val snapshot = entriesCollection
+                .orderBy("capturedAtEpochMillis", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
                 .awaitResult()
+
+            snapshot.documents.mapNotNull { document ->
+                document.toObject(FirestoreSupplyEntryDto::class.java)?.toRemoteEntity(document.id)
+            }.forEach { entity ->
+                supplyEntryDao.upsert(entity)
+            }
+        }
+    }
+
+    override suspend fun saveEntry(entry: SupplyEntry) {
+        // Initially save as 'isSynced = false'
+        val pendingEntry = entry.copy(isSynced = false)
+        supplyEntryDao.upsert(pendingEntry.toLocalEntity())
+        
+        val entriesCollection = entriesCollection()
+        runCatching {
+            entriesCollection.document(pendingEntry.id)
+                .set(pendingEntry.toLocalEntity().toFirestoreDto())
+                .awaitResult()
+            
+            // If successful, mark as synced
+            supplyEntryDao.upsert(pendingEntry.copy(isSynced = true).toLocalEntity())
+        }.onFailure {
+            // Background sync worker will pick this up later since isSynced = false
+            it.printStackTrace()
+        }
+    }
+
+    override suspend fun syncPendingEntries() {
+        val pendingEntries = supplyEntryDao.getPendingEntries()
+        if (pendingEntries.isEmpty()) return
+
+        val entriesCollection = entriesCollection()
+        pendingEntries.forEach { entity ->
+            runCatching {
+                entriesCollection.document(entity.id)
+                    .set(entity.toFirestoreDto())
+                    .awaitResult()
+                supplyEntryDao.upsert(entity.copy(isSynced = true))
+            }.onFailure {
+                it.printStackTrace()
+            }
         }
     }
 

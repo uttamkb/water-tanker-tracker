@@ -6,4 +6,5 @@ data class FirestoreUserProfileDto(
     val role: String = "ADMIN",
     val apartmentId: String = "",
     val apartmentName: String? = null,
+    val fcmTokens: List<String> = emptyList(),
 )

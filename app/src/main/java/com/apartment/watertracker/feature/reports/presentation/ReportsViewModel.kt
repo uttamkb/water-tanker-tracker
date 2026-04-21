@@ -22,6 +22,9 @@ data class VendorMonthlySummary(
     val vendorId: String,
     val vendorName: String,
     val tankerCount: Int,
+    val totalVolumeLiters: Long,
+    val totalSpend: Double,
+    val avgPricePerLitre: Double
 )
 
 data class ReportEntryDetail(
@@ -32,12 +35,14 @@ data class ReportEntryDetail(
     val vendorId: String,
     val vehicleNumber: String,
     val hardness: Int,
+    val volume: Int,
     val isDuplicate: Boolean,
 )
 
 data class ReportsUiState(
     val monthLabel: String = "",
     val totalTankers: Int = 0,
+    val totalVolumeLiters: Long = 0,
     val duplicateFlags: Int = 0,
     val vendorSummaries: List<VendorMonthlySummary> = emptyList(),
     val dailyEntries: Map<String, List<ReportEntryDetail>> = emptyMap(),
@@ -49,6 +54,7 @@ data class ReportsUiState(
 class ReportsViewModel @Inject constructor(
     private val vendorRepository: VendorRepository,
     private val supplyEntryRepository: SupplyEntryRepository,
+    private val generatePdfReportUseCase: com.apartment.watertracker.domain.usecase.GeneratePdfReportUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReportsUiState())
@@ -80,6 +86,7 @@ class ReportsViewModel @Inject constructor(
                         vendorId = entry.vendorId,
                         vehicleNumber = entry.vehicleNumber?.ifBlank { "N/A" } ?: "N/A",
                         hardness = entry.hardnessPpm,
+                        volume = entry.volumeLiters,
                         isDuplicate = entry.duplicateFlag
                     )
                 }
@@ -87,8 +94,9 @@ class ReportsViewModel @Inject constructor(
                 ReportsUiState(
                     monthLabel = "${now.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${now.year}",
                     totalTankers = entries.size,
+                    totalVolumeLiters = entries.sumOf { it.volumeLiters.toLong() },
                     duplicateFlags = entries.count { it.duplicateFlag },
-                    vendorSummaries = buildSummaries(vendors, entries.map { it.vendorId }),
+                    vendorSummaries = buildSummaries(vendors, entries),
                     dailyEntries = entryDetails.groupBy { it.dateString }
                 )
             }.collect { state ->
@@ -102,12 +110,22 @@ class ReportsViewModel @Inject constructor(
         }
     }
 
-    private fun buildSummaries(vendors: List<Vendor>, entryVendorIds: List<String>): List<VendorMonthlySummary> {
+    private fun buildSummaries(vendors: List<Vendor>, entries: List<com.apartment.watertracker.domain.model.SupplyEntry>): List<VendorMonthlySummary> {
         return vendors.map { vendor ->
+            val vendorEntries = entries.filter { it.vendorId == vendor.id }
+            val totalVolume = vendorEntries.sumOf { it.volumeLiters.toLong() }
+            
+            // NOTE: Using the same mock pricing from Dashboard (₹600 per tanker) until Contract Pricing is implemented.
+            val estimatedSpend = vendorEntries.size * 600.0
+            val avgPrice = if (totalVolume > 0) estimatedSpend / totalVolume else 0.0
+            
             VendorMonthlySummary(
                 vendorId = vendor.id,
                 vendorName = vendor.supplierName,
-                tankerCount = entryVendorIds.count { it == vendor.id },
+                tankerCount = vendorEntries.size,
+                totalVolumeLiters = totalVolume,
+                totalSpend = estimatedSpend,
+                avgPricePerLitre = avgPrice
             )
         }.filter { it.tankerCount > 0 }
     }
@@ -122,7 +140,7 @@ class ReportsViewModel @Inject constructor(
 
             val sb = StringBuilder()
             // Header
-            sb.append("Date,Time,Vendor,Vehicle Number,Hardness (PPM),Is Duplicate,Remarks\n")
+            sb.append("Date,Time,Vendor,Vehicle Number,Volume (L),Hardness (PPM),Is Duplicate,Remarks\n")
             
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd,HH:mm:ss").withZone(ZoneId.systemDefault())
 
@@ -132,7 +150,7 @@ class ReportsViewModel @Inject constructor(
                 val vehicle = entry.vehicleNumber?.replace(",", " ") ?: ""
                 val remarks = entry.remarks?.replace(",", " ") ?: ""
                 
-                sb.append("$dateTime,$vendorName,$vehicle,${entry.hardnessPpm},${entry.duplicateFlag},$remarks\n")
+                sb.append("$dateTime,$vendorName,$vehicle,${entry.volumeLiters},${entry.hardnessPpm},${entry.duplicateFlag},$remarks\n")
             }
             
             _uiState.update { it.copy(isExporting = false, exportMessage = "Export generated successfully") }
@@ -141,6 +159,17 @@ class ReportsViewModel @Inject constructor(
             _uiState.update { it.copy(isExporting = false, exportMessage = "Export failed: ${e.message}") }
             return ""
         }
+    }
+    
+    suspend fun generatePdfData(): java.io.File? {
+        val state = _uiState.value
+        return generatePdfReportUseCase.execute(
+            monthLabel = state.monthLabel,
+            totalTankers = state.totalTankers,
+            totalVolumeLiters = state.totalVolumeLiters,
+            vendorSummaries = state.vendorSummaries,
+            dailyEntries = state.dailyEntries
+        )
     }
     
     fun clearExportMessage() {

@@ -11,34 +11,42 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColors = lightColorScheme(
-    primary = AquaBlue,
-    onPrimary = Surface,
-    primaryContainer = DeepAqua,
-    onPrimaryContainer = Surface,
-    secondary = Teal,
-    onSecondary = Surface,
-    tertiary = Coral,
-    onTertiary = Surface,
-    background = Surface,
-    onBackground = Ink,
-    surface = Surface,
-    onSurface = Ink,
-    surfaceVariant = SurfaceAlt,
-    onSurfaceVariant = DeepAqua,
-    error = Coral,
+    primary = MidnightBlue,
+    onPrimary = TextOnPrimary,
+    primaryContainer = AppSurfaceVariant,
+    onPrimaryContainer = MidnightBlue,
+    secondary = PremiumGold,
+    onSecondary = TextOnSecondary,
+    tertiary = GoldMuted,
+    onTertiary = TextOnSecondary,
+    background = AppBackground,
+    onBackground = TextPrimary,
+    surface = AppSurface,
+    onSurface = TextPrimary,
+    surfaceVariant = AppSurfaceVariant,
+    onSurfaceVariant = TextSecondary,
+    error = AppError,
+    outline = AppBorder
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Sand,
-    secondary = Teal,
-    background = DeepAqua,
-    surface = DeepAqua,
+    primary = PremiumGold,
+    onPrimary = TextOnSecondary,
+    secondary = MidnightBlue,
+    onSecondary = TextOnPrimary,
+    tertiary = GoldLight,
+    background = DeepNavy,
+    surface = DeepNavy,
+    onBackground = TextInverted,
+    onSurface = TextInverted,
+    error = AppError
 )
 
 @Composable
 fun WaterTrackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    // Set to false by default for premium brand consistency
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

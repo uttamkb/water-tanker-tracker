@@ -21,6 +21,8 @@ googleId = "1.1.1"
 zxing = "3.5.3"
 androidxPrint = "1.1.0"
 guava = "33.4.0-jre"
+itextPdf = "7.2.5"
+razorpay = "1.6.38"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -53,14 +55,18 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-storage = { module = "com.google.firebase:firebase-storage" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleId" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 androidx-print = { module = "androidx.print:print", version.ref = "androidxPrint" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
+itext-pdf = { module = "com.itextpdf:itext7-core", version.ref = "itextPdf" }
+razorpay = { module = "com.razorpay:checkout", version.ref = "razorpay" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

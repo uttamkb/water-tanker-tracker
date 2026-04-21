@@ -18,6 +18,7 @@ data class ScanUiState(
     val vendors: List<Vendor> = emptyList(),
     val isResolvingScan: Boolean = false,
     val pendingVendorId: String? = null,
+    val vendorToConfirm: Vendor? = null,
     val scanError: String? = null,
     val lastScannedQrValue: String? = null,
     val manualQrInput: String = "",
@@ -81,7 +82,7 @@ class ScanViewModel @Inject constructor(
                 if (vendor != null) {
                     it.copy(
                         isResolvingScan = false,
-                        pendingVendorId = vendor.id,
+                        vendorToConfirm = vendor,
                         scanError = null,
                     )
                 } else {
@@ -92,10 +93,28 @@ class ScanViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
 
-            if (vendor != null) {
-                recentScans[normalizedQr] = Instant.now()
-            }
+    fun confirmVendorSelection() {
+        val vendor = _uiState.value.vendorToConfirm ?: return
+        val qrValue = _uiState.value.lastScannedQrValue ?: return
+        
+        recentScans[qrValue] = Instant.now()
+        _uiState.update { 
+            it.copy(
+                vendorToConfirm = null,
+                pendingVendorId = vendor.id
+            ) 
+        }
+    }
+
+    fun cancelVendorSelection() {
+        _uiState.update { 
+            it.copy(
+                vendorToConfirm = null,
+                lastScannedQrValue = null
+            )
         }
     }
 

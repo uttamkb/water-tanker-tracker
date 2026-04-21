@@ -5,6 +5,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FlashlightOff
 import androidx.compose.material.icons.outlined.FlashlightOn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,12 +47,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.apartment.watertracker.core.ui.components.PrimaryScaffold
+import com.apartment.watertracker.core.ui.components.GlassSurface
+import com.apartment.watertracker.core.ui.components.PremiumCard
 
 @Composable
 fun ScanScreen(
@@ -106,18 +115,11 @@ fun ScanScreen(
                 )
             }
             item {
-                Card(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
+                PremiumCard {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(320.dp)
-                            .padding(14.dp),
+                            .height(320.dp),
                     ) {
                         if (hasCameraPermission) {
                             CameraQrScannerView(
@@ -148,33 +150,39 @@ fun ScanScreen(
                 }
             }
             item {
-                Card(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Text(
-                        text = when {
-                            uiState.isResolvingScan -> "Resolving scanned QR..."
-                            uiState.lastScannedQrValue != null -> "Last scanned QR: ${uiState.lastScannedQrValue}"
-                            else -> "Scanner ready"
-                        },
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                AnimatedContent(
+                    targetState = uiState.isResolvingScan,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "ScannerStatusAnimation"
+                ) { isResolving ->
+                    PremiumCard(
+                        containerColor = if (isResolving) 
+                            MaterialTheme.colorScheme.primaryContainer 
+                        else 
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    ) {
+                        Text(
+                            text = when {
+                                isResolving -> "Resolving scanned QR..."
+                                uiState.lastScannedQrValue != null -> "Last scanned QR: ${uiState.lastScannedQrValue}"
+                                else -> "Scanner ready"
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isResolving)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             if (uiState.isResolvingScan) {
+                // Glass effect handled by animated content wrapper above or kept separate
                 item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        ),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    GlassSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Row(
                             modifier = Modifier
@@ -189,7 +197,12 @@ fun ScanScreen(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Column {
-                                Text("Opening entry form…", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(
+                                    text = "Opening entry form…",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
                                 Text(
                                     text = "Hold steady, we’ll auto-open when resolved.",
                                     style = MaterialTheme.typography.bodySmall,
@@ -263,6 +276,48 @@ fun ScanScreen(
                     Text(text = "Use ${vendor.supplierName}")
                 }
             }
+        }
+        
+        // Post-Scan Validation Dialog
+        uiState.vendorToConfirm?.let { vendor ->
+            AlertDialog(
+                onDismissRequest = viewModel::cancelVendorSelection,
+                title = { Text(text = "Confirm Vendor") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(text = "Scanned successfully. Is this the correct vendor?")
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = vendor.supplierName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                vendor.contactPerson?.let {
+                                    Text(
+                                        text = "Contact: $it",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = viewModel::confirmVendorSelection) {
+                        Text("Yes, Proceed")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = viewModel::cancelVendorSelection) {
+                        Text("No, Rescan")
+                    }
+                }
+            )
         }
     }
 }

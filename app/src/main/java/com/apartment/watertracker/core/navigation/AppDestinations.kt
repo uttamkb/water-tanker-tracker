@@ -13,6 +13,15 @@ sealed class AppDestination(val route: String) {
         fun createRoute(vendorId: String): String = "supply_entry/$vendorId"
     }
     data object Reports : AppDestination("reports")
+    data object EntryDetail : AppDestination("entry_detail/{entryId}") {
+        fun createRoute(entryId: String): String = "entry_detail/$entryId"
+    }
+    data object Analytics : AppDestination("analytics")
+    data object RequestTanker : AppDestination("request_tanker")
+    data object Bids : AppDestination("bids/{requestId}") {
+        fun createRoute(requestId: String): String = "bids/$requestId"
+    }
+    data object Billing : AppDestination("billing")
 }
 
 val primaryRoutes = setOf(

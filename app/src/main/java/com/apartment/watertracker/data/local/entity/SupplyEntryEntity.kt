@@ -9,6 +9,12 @@ data class SupplyEntryEntity(
     val apartmentId: String,
     val vendorId: String,
     val hardnessPpm: Int,
+    val phLevel: Double?,
+    val tdsPpm: Int?,
+    val volumeLiters: Int,
+    val qualityRating: Int?,
+    val timelinessRating: Int?,
+    val hygieneRating: Int?,
     val capturedAtEpochMillis: Long,
     val latitude: Double,
     val longitude: Double,
@@ -19,4 +25,5 @@ data class SupplyEntryEntity(
     val duplicateFlag: Boolean,
     val duplicateReferenceId: String?,
     val createdByUserId: String,
+    val isSynced: Boolean = true,
 )

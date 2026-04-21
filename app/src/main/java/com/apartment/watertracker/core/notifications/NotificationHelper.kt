@@ -10,36 +10,60 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
 object NotificationHelper {
-    private const val CHANNEL_ID = "duplicate_entries"
-    private const val CHANNEL_NAME = "Duplicate entry alerts"
+    private const val CHANNEL_ID_ALERTS = "tanker_alerts"
+    private const val CHANNEL_NAME_ALERTS = "Tanker Alerts"
+    
+    private const val CHANNEL_ID_DUPLICATE = "duplicate_entries"
+    private const val CHANNEL_NAME_DUPLICATE = "Duplicate entry alerts"
 
     fun showDuplicateWarning(context: Context, title: String, message: String) {
-        if (!ensureChannel(context)) return
+        showNotification(context, CHANNEL_ID_DUPLICATE, CHANNEL_NAME_DUPLICATE, title, message, 1001)
+    }
+
+    fun showTankerArrivalNotification(context: Context, title: String, message: String) {
+        showNotification(context, CHANNEL_ID_ALERTS, CHANNEL_NAME_ALERTS, title, message, 1002)
+    }
+
+    fun showBidNotification(context: Context, title: String, message: String) {
+        showNotification(context, CHANNEL_ID_ALERTS, CHANNEL_NAME_ALERTS, title, message, 1003)
+    }
+
+    private fun showNotification(
+        context: Context, 
+        channelId: String, 
+        channelName: String, 
+        title: String, 
+        message: String,
+        notificationId: Int
+    ) {
+        if (!ensureChannel(context, channelId, channelName)) return
+        
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
             return
         }
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_error)
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.stat_notify_chat) // Replace with app icon later
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
-        NotificationManagerCompat.from(context).notify(1001, notification)
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
-    private fun ensureChannel(context: Context): Boolean {
+    private fun ensureChannel(context: Context, channelId: String, channelName: String): Boolean {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val existing = manager.getNotificationChannel(CHANNEL_ID)
+        val existing = manager.getNotificationChannel(channelId)
         if (existing != null) return true
 
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            CHANNEL_NAME,
+            channelId,
+            channelName,
             NotificationManager.IMPORTANCE_HIGH,
         )
         manager.createNotificationChannel(channel)

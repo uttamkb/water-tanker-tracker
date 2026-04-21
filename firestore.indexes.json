@@ -1,4 +1,25 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "supply_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "capturedAtEpochMillis",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "supply_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "capturedAtEpochMillis",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

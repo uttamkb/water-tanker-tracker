@@ -1,3 +1,4 @@
 <resources>
-    <color name="launcher_background">#0E5E86</color>
+    <!-- Background color for the adaptive icon. Using a deep premium blue/aqua base. -->
+    <color name="launcher_background">#E3F2FD</color>
 </resources>

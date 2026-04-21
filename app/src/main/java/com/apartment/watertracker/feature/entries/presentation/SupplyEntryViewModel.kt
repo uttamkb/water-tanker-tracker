@@ -36,8 +36,14 @@ data class SupplyEntryUiState(
     val isCapturingLocation: Boolean = false,
     val locationError: String? = null,
     val hardnessInput: String = "",
+    val phInput: String = "",
+    val tdsInput: String = "",
+    val volumeInput: String = "",
     val vehicleNumber: String = "",
     val remarks: String = "",
+    val qualityRating: Int = 0,
+    val timelinessRating: Int = 0,
+    val hygieneRating: Int = 0,
     val isSaving: Boolean = false,
     val duplicateWarning: DuplicateWarningState? = null,
     val entrySaved: Boolean = false,
@@ -62,7 +68,12 @@ class SupplyEntryViewModel @Inject constructor(
         viewModelScope.launch {
             vendorRepository.refreshVendors()
             vendorRepository.observeVendor(vendorId).collect { vendor ->
-                _uiState.update { it.copy(vendor = vendor) }
+                _uiState.update { 
+                    it.copy(
+                        vendor = vendor,
+                        volumeInput = vendor?.defaultCapacityLiters?.toString() ?: it.volumeInput
+                    ) 
+                }
             }
         }
 
@@ -73,12 +84,36 @@ class SupplyEntryViewModel @Inject constructor(
         _uiState.update { it.copy(hardnessInput = value) }
     }
 
+    fun updatePh(value: String) {
+        _uiState.update { it.copy(phInput = value) }
+    }
+
+    fun updateTds(value: String) {
+        _uiState.update { it.copy(tdsInput = value) }
+    }
+
+    fun updateVolume(value: String) {
+        _uiState.update { it.copy(volumeInput = value) }
+    }
+
     fun updateVehicleNumber(value: String) {
         _uiState.update { it.copy(vehicleNumber = value) }
     }
 
     fun updateRemarks(value: String) {
         _uiState.update { it.copy(remarks = value) }
+    }
+    
+    fun updateQualityRating(value: Int) {
+        _uiState.update { it.copy(qualityRating = value) }
+    }
+
+    fun updateTimelinessRating(value: Int) {
+        _uiState.update { it.copy(timelinessRating = value) }
+    }
+
+    fun updateHygieneRating(value: Int) {
+        _uiState.update { it.copy(hygieneRating = value) }
     }
 
     fun dismissDuplicateWarning() {
@@ -90,7 +125,10 @@ class SupplyEntryViewModel @Inject constructor(
             val state = _uiState.value
             val vendor = state.vendor ?: return@launch
             val location = state.location ?: return@launch
-            val hardness = state.hardnessInput.toIntOrNull() ?: return@launch
+            val hardness = state.hardnessInput.toIntOrNull() ?: 0
+            val phLevel = state.phInput.toDoubleOrNull()
+            val tdsPpm = state.tdsInput.toIntOrNull()
+            val volume = state.volumeInput.toIntOrNull() ?: vendor.defaultCapacityLiters
 
             _uiState.update { it.copy(isSaving = true) }
 
@@ -98,6 +136,7 @@ class SupplyEntryViewModel @Inject constructor(
             val isDuplicate = checkDuplicateEntryUseCase.execute(
                 previousEntry = latestEntry,
                 candidateCapturedAt = state.capturedAt,
+                candidateVendorId = vendor.id
             )
 
             if (isDuplicate && !forceSave) {
@@ -123,6 +162,12 @@ class SupplyEntryViewModel @Inject constructor(
                     apartmentId = vendor.apartmentId,
                     vendorId = vendor.id,
                     hardnessPpm = hardness,
+                    phLevel = phLevel,
+                    tdsPpm = tdsPpm,
+                    volumeLiters = volume,
+                    qualityRating = state.qualityRating.takeIf { it > 0 },
+                    timelinessRating = state.timelinessRating.takeIf { it > 0 },
+                    hygieneRating = state.hygieneRating.takeIf { it > 0 },
                     capturedAt = state.capturedAt,
                     latitude = location.latitude,
                     longitude = location.longitude,

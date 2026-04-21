@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,9 +34,20 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.apartment.watertracker.core.ui.components.EmptyState
 import com.apartment.watertracker.core.ui.components.PrimaryScaffold
+import com.apartment.watertracker.core.ui.components.PremiumCard
 import com.apartment.watertracker.domain.model.Vendor
+import com.apartment.watertracker.feature.vendors.presentation.VendorUiModel
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun VendorsScreen(
@@ -44,16 +57,19 @@ fun VendorsScreen(
     val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     var selectedVendorForQr by remember { mutableStateOf<Vendor?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.saveMessage) {
-        if (uiState.saveMessage != null) {
+        uiState.saveMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
             viewModel.clearSaveMessage()
         }
     }
 
     PrimaryScaffold(
         title = "Vendors",
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        snackbarHostState = snackbarHostState
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -63,20 +79,16 @@ fun VendorsScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Card(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                PremiumCard(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
                             text = "Register vendor",
                             style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         OutlinedTextField(
@@ -96,6 +108,14 @@ fun VendorsScreen(
                             onValueChange = viewModel::updatePhoneNumber,
                             label = { Text(text = "Phone number") },
                             modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                        )
+                        OutlinedTextField(
+                            value = uiState.defaultCapacity,
+                            onValueChange = viewModel::updateDefaultCapacity,
+                            label = { Text(text = "Default Tanker Capacity (Liters)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         Button(
                             modifier = Modifier.fillMaxWidth(),
@@ -103,29 +123,35 @@ fun VendorsScreen(
                         ) {
                             Text(text = "Save Vendor")
                         }
-                        uiState.saveMessage?.let { message ->
-                            Text(
-                                text = message,
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
                     }
                 }
             }
-            item {
-                Text(
-                    text = "Registered vendors",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-            items(uiState.vendors, key = { it.id }) { vendor ->
-                VendorCard(
-                    vendor = vendor,
-                    onShowQr = { selectedVendorForQr = vendor },
-                    onDelete = { viewModel.deleteVendor(vendor.id) }
-                )
+            
+            if (uiState.vendors.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = "No Vendors Yet",
+                        description = "Add your first water supplier above to generate their unique QR code.",
+                        icon = Icons.Outlined.PersonAdd,
+                        modifier = Modifier.padding(top = 48.dp)
+                    )
+                }
+            } else {
+                item {
+                    Text(
+                        text = "Registered vendors",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                items(uiState.vendors, key = { it.vendor.id }) { vendorModel ->
+                    VendorCard(
+                        vendorModel = vendorModel,
+                        onShowQr = { selectedVendorForQr = vendorModel.vendor },
+                        onDelete = { viewModel.deleteVendor(vendorModel.vendor.id) }
+                    )
+                }
             }
         }
     }
@@ -142,19 +168,17 @@ fun VendorsScreen(
 
 @Composable
 private fun VendorCard(
-    vendor: Vendor,
+    vendorModel: VendorUiModel,
     onShowQr: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    val vendor = vendorModel.vendor
+    val rating = vendorModel.rating
+
+    PremiumCard(
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
@@ -169,7 +193,7 @@ private fun VendorCard(
                     Text(
                         text = vendor.supplierName,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     vendor.contactPerson?.takeIf { it.isNotBlank() }?.let {
@@ -184,6 +208,30 @@ private fun VendorCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Text(
+                        text = "Capacity: ${vendor.defaultCapacityLiters} Liters",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    if (rating != null && rating.totalRatings > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "Rating",
+                                tint = Color(0xFFFFC107),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${String.format(java.util.Locale.US, "%.1f", rating.overallRating)} (${rating.totalRatings} ratings)",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
                 Column(
                     horizontalAlignment = Alignment.End,
