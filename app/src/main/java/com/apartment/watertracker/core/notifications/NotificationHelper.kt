@@ -16,6 +16,9 @@ object NotificationHelper {
     private const val CHANNEL_ID_DUPLICATE = "duplicate_entries"
     private const val CHANNEL_NAME_DUPLICATE = "Duplicate entry alerts"
 
+    private const val CHANNEL_ID_INVENTORY = "inventory_alerts"
+    private const val CHANNEL_NAME_INVENTORY = "Water Inventory Alerts"
+
     fun showDuplicateWarning(context: Context, title: String, message: String) {
         showNotification(context, CHANNEL_ID_DUPLICATE, CHANNEL_NAME_DUPLICATE, title, message, 1001)
     }
@@ -26,6 +29,10 @@ object NotificationHelper {
 
     fun showBidNotification(context: Context, title: String, message: String) {
         showNotification(context, CHANNEL_ID_ALERTS, CHANNEL_NAME_ALERTS, title, message, 1003)
+    }
+
+    fun showLowWaterAlert(context: Context, title: String, message: String) {
+        showNotification(context, CHANNEL_ID_INVENTORY, CHANNEL_NAME_INVENTORY, title, message, 1004)
     }
 
     private fun showNotification(

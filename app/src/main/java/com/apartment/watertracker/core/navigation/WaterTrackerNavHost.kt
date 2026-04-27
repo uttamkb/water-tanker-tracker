@@ -31,6 +31,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.apartment.watertracker.core.ui.components.GlassSurface
+import com.apartment.watertracker.domain.model.UserRole
 import com.apartment.watertracker.feature.admin.presentation.ApartmentSetupScreen
 import com.apartment.watertracker.feature.admin.presentation.ApartmentSwitchScreen
 import com.apartment.watertracker.feature.admin.presentation.AllApartmentsScreen
@@ -38,6 +39,7 @@ import com.apartment.watertracker.feature.admin.presentation.TeamScreen
 import com.apartment.watertracker.feature.auth.presentation.LoginScreen
 import com.apartment.watertracker.feature.dashboard.presentation.DashboardScreen
 import com.apartment.watertracker.feature.entries.presentation.SupplyEntryScreen
+import com.apartment.watertracker.feature.entries.presentation.GateEntryScreen
 import com.apartment.watertracker.feature.reports.presentation.EntryDetailScreen
 import com.apartment.watertracker.feature.reports.presentation.ReportsScreen
 import com.apartment.watertracker.feature.scan.presentation.ScanScreen
@@ -59,26 +61,29 @@ fun WaterTrackerNavHost() {
             route = AppDestination.Dashboard.route,
             label = "Home",
             icon = Icons.Outlined.Dashboard,
+            roles = listOf(UserRole.SECURITY_GUARD, UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
         BottomNavItem(
             route = AppDestination.Vendors.route,
             label = "Vendors",
             icon = Icons.Outlined.LocalShipping,
+            roles = listOf(UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
         BottomNavItem(
             route = AppDestination.Scan.route,
             label = "Scan",
             icon = Icons.Outlined.QrCodeScanner,
+            roles = listOf(UserRole.SECURITY_GUARD, UserRole.SOCIETY_ADMIN)
         ),
         BottomNavItem(
             route = AppDestination.Reports.route,
             label = "Reports",
             icon = Icons.Outlined.Assessment,
+            roles = listOf(UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
     )
-    val primaryItems = when (roleState.isOperator) {
-        true -> allPrimaryItems.filter { it.route != AppDestination.Vendors.route }
-        false -> allPrimaryItems
+    val primaryItems = allPrimaryItems.filter { item ->
+        roleState.role?.let { it in item.roles } ?: false
     }
 
     // Helper for top-level navigation (Bottom Nav & Dashboard cards)
@@ -268,6 +273,12 @@ fun WaterTrackerNavHost() {
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+
+                composable(AppDestination.GateEntry.route) {
+                    GateEntryScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
@@ -277,4 +288,5 @@ private data class BottomNavItem(
     val route: String,
     val label: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val roles: List<UserRole>
 )

@@ -70,32 +70,28 @@ fun ReportsScreen(
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Daily Log", "Vendor Billing")
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val csvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv")
-    ) { uri ->
-        uri?.let {
-            scope.launch {
-                val csvContent = viewModel.generateCsvData()
-                if (csvContent.isNotBlank()) {
-                    try {
-                        context.contentResolver.openOutputStream(it)?.use { outputStream ->
-                            outputStream.write(csvContent.toByteArray())
-                        }
-                        snackbarHostState.showSnackbar("Report exported to CSV!")
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar("Failed to write CSV: ${e.message}")
-                    }
-                }
+    LaunchedEffect(Unit) {
+        viewModel.shareFileEvent.collect { file ->
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = if (file.extension == "csv") "text/csv" else "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+            context.startActivity(Intent.createChooser(intent, "Share Report"))
         }
     }
 
     LaunchedEffect(uiState.exportMessage) {
+// ... rest of the file ...
         uiState.exportMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             viewModel.clearExportMessage()
@@ -173,10 +169,7 @@ fun ReportsScreen(
                 ) {
                     Button(
                         modifier = Modifier.weight(1f),
-                        onClick = {
-                            val fileName = "WaterTracker_Report_${uiState.monthLabel.replace(" ", "_")}.csv"
-                            csvLauncher.launch(fileName)
-                        },
+                        onClick = { viewModel.exportCsv() },
                         enabled = !uiState.isExporting && uiState.totalTankers > 0
                     ) {
                         if (uiState.isExporting) {
@@ -188,32 +181,13 @@ fun ReportsScreen(
                         } else {
                             Icon(imageVector = Icons.Outlined.Download, contentDescription = "CSV")
                             Spacer(modifier = Modifier.size(4.dp))
-                            Text("CSV")
+                            Text("Export CSV")
                         }
                     }
 
                     Button(
                         modifier = Modifier.weight(1f),
-                        onClick = {
-                            scope.launch {
-                                val pdfFile = viewModel.generatePdfData()
-                                if (pdfFile != null) {
-                                    val uri = FileProvider.getUriForFile(
-                                        context,
-                                        "${context.packageName}.fileprovider",
-                                        pdfFile
-                                    )
-                                    val intent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "application/pdf"
-                                        putExtra(Intent.EXTRA_STREAM, uri)
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    context.startActivity(Intent.createChooser(intent, "Share Monthly Report"))
-                                } else {
-                                    Toast.makeText(context, "Failed to generate PDF", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
+                        onClick = { viewModel.exportPdf() },
                         enabled = !uiState.isExporting && uiState.totalTankers > 0
                     ) {
                         Icon(imageVector = Icons.Outlined.Download, contentDescription = "PDF")

@@ -22,6 +22,7 @@ sealed class AppDestination(val route: String) {
         fun createRoute(requestId: String): String = "bids/$requestId"
     }
     data object Billing : AppDestination("billing")
+    data object GateEntry : AppDestination("gate_entry")
 }
 
 val primaryRoutes = setOf(

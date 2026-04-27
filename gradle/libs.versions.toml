@@ -8,6 +8,7 @@ activityCompose = "1.10.1"
 navigationCompose = "2.8.9"
 hilt = "2.56.1"
 hiltNavigationCompose = "1.2.0"
+hiltWork = "1.2.0"
 ksp = "2.1.10-1.0.30"
 room = "2.6.1"
 cameraX = "1.4.1"
@@ -40,6 +41,7 @@ androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

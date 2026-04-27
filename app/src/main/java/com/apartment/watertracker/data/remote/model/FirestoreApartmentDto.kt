@@ -6,4 +6,5 @@ data class FirestoreApartmentDto(
     val createdByUserId: String = "",
     val subscriptionStatus: String = "ACTIVE",
     val subscriptionExpiresAtEpochMillis: Long? = null,
+    val totalStorageCapacityLiters: Int = 100000,
 )

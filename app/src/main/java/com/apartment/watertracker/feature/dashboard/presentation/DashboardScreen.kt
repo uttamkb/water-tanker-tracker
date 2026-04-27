@@ -90,64 +90,69 @@ fun DashboardScreen(
     
     val uiState = (uiStateWrapper as? UiState.Success)?.data ?: DashboardUiState()
     
-    val primaryActions = listOf(
+    val allActions = listOf(
         DashboardAction(
             title = "Scan Tanker",
             subtitle = "Start a fresh entry from vendor QR",
             icon = Icons.Outlined.QrCodeScanner,
             onClick = onScanClick,
+            roles = listOf(UserRole.SECURITY_GUARD, UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
         DashboardAction(
             title = "Vendor Desk",
             subtitle = "Register suppliers and print QR",
             icon = Icons.Outlined.LocalShipping,
             onClick = onVendorsClick,
+            roles = listOf(UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
         DashboardAction(
             title = "Analytics",
             subtitle = "Track water quality and TDS trends",
             icon = Icons.Outlined.Assessment,
             onClick = onAnalyticsClick,
+            roles = listOf(UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
         DashboardAction(
             title = "Request Tanker",
             subtitle = "Broadcast needs to local vendors",
             icon = Icons.Outlined.Add,
             onClick = onRequestTankerClick,
+            roles = listOf(UserRole.SOCIETY_ADMIN, UserRole.FACILITY_MANAGER)
         ),
         DashboardAction(
             title = "Billing & Payments",
             subtitle = "Generate invoices and settle accounts",
             icon = Icons.Outlined.Assessment,
             onClick = onBillingClick,
+            roles = listOf(UserRole.SOCIETY_ADMIN)
         ),
     )
+
+    val primaryActions = allActions.filter { uiState.userRole in it.roles }
+    
     val adminActions = listOf(
         DashboardAction(
             title = "Apartment Setup",
             subtitle = "Set apartment name and profile",
             icon = Icons.Outlined.Apartment,
             onClick = onApartmentSetupClick,
-        ),
-        DashboardAction(
-            title = "Switch Apartment",
-            subtitle = "Move to another building you manage",
-            icon = Icons.Outlined.Apartment,
-            onClick = onApartmentSwitchClick,
+            roles = listOf(UserRole.SOCIETY_ADMIN)
         ),
         DashboardAction(
             title = "Team Access",
             subtitle = "Invite operators and manage access",
             icon = Icons.Outlined.Groups,
             onClick = onTeamClick,
+            roles = listOf(UserRole.SOCIETY_ADMIN)
         ),
         DashboardAction(
             title = "All Apartments",
             subtitle = "Owner-level control of subscriptions",
             icon = Icons.Outlined.Assessment,
             onClick = onApartmentAdminClick,
+            roles = listOf(UserRole.PLATFORM_OWNER)
         ),
-    )
+    ).filter { uiState.userRole in it.roles }
 
     PrimaryScaffold(title = "Dashboard") { paddingValues ->
         val isRefreshing = uiStateWrapper is UiState.Loading
@@ -200,6 +205,18 @@ fun DashboardScreen(
                             // Intelligence: Activity Chart
                             item {
                                 ActivityChart(data = uiState.last7DaysData)
+                            }
+
+                            // Smart Forecast Insight
+                            uiState.forecast?.nextTankerDate?.let { date ->
+                                item {
+                                    ForecastInsightCard(
+                                        nextDate = date,
+                                        avgUsage = uiState.forecast.averageDailyUsageLiters,
+                                        currentLevel = uiState.forecast.predictedCurrentLevelLiters,
+                                        confidence = uiState.forecast.confidenceScore
+                                    )
+                                }
                             }
 
                             // Timeline View
@@ -266,7 +283,7 @@ fun DashboardScreen(
                                 item {
                                     ActionGrid(actions = primaryActions)
                                 }
-                                if (uiState.userRole == UserRole.ADMIN) {
+                                if (uiState.userRole == UserRole.SOCIETY_ADMIN) {
                                     item {
                                         SectionTitle(
                                             title = "Admin controls",
@@ -889,16 +906,103 @@ private fun TimelineView(deliveries: List<RecentDeliveryUiModel>) {
     }
 }
 
+@Composable
+private fun ForecastInsightCard(
+    nextDate: java.time.LocalDate,
+    avgUsage: Long,
+    currentLevel: Long,
+    confidence: Float
+) {
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, dd MMM")
+    
+    PremiumCard(
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Assessment,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Smart Prediction",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                
+                if (currentLevel < 10000) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.error,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "LOW WATER",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onError,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+            }
+            
+            Text(
+                text = "Next Tanker Expected on:",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+            )
+            Text(
+                text = nextDate.format(formatter),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.1f),
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Daily Avg", style = MaterialTheme.typography.labelSmall)
+                    Text("${avgUsage}L", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                }
+                Column {
+                    Text("Est. Level", style = MaterialTheme.typography.labelSmall)
+                    Text("${currentLevel}L", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (currentLevel < 10000) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onTertiaryContainer)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Confidence", style = MaterialTheme.typography.labelSmall)
+                    Text("${(confidence * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
 private data class DashboardAction(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
     val onClick: () -> Unit,
+    val roles: List<UserRole> = emptyList()
 )
 
 private fun UserRole.displayLabel(): String = when (this) {
-    UserRole.ADMIN -> "Admin"
-    UserRole.OPERATOR -> "Operator"
+    UserRole.SOCIETY_ADMIN -> "Admin"
+    UserRole.SECURITY_GUARD -> "Guard"
+    UserRole.FACILITY_MANAGER -> "Manager"
+    UserRole.PLATFORM_OWNER -> "Owner"
 }
 
 private fun gridHeightFor(itemCount: Int): androidx.compose.ui.unit.Dp {

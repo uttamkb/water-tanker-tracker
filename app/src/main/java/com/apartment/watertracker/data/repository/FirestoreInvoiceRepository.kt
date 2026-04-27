@@ -1,5 +1,6 @@
 package com.apartment.watertracker.data.repository
 
+import com.apartment.watertracker.data.local.dao.SupplyEntryDao
 import com.apartment.watertracker.data.remote.mapper.toDomain
 import com.apartment.watertracker.data.remote.mapper.toFirestoreDto
 import com.apartment.watertracker.data.remote.model.FirestoreInvoiceDto
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
@@ -22,7 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class FirestoreInvoiceRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val apartmentScopeProvider: ApartmentScopeProvider
+    private val apartmentScopeProvider: ApartmentScopeProvider,
+    private val supplyEntryDao: SupplyEntryDao
 ) : InvoiceRepository {
 
     private val collection = firestore.collection("invoices")
@@ -48,12 +52,16 @@ class FirestoreInvoiceRepository @Inject constructor(
     override suspend fun generateDraftInvoice(vendorId: String, vendorName: String, month: String): Invoice {
         val apartmentId = apartmentScopeProvider.getApartmentId()
         
-        // This is a stub for the client side. The backend should ideally calculate this 
-        // to prevent client-side tampering, but we'll implement it here for the MVP.
+        // Parse month "YYYY-MM" to find range
+        val yearMonth = YearMonth.parse(month)
+        val zone = ZoneId.systemDefault()
+        val start = yearMonth.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        val end = yearMonth.atEndOfMonth().atTime(23, 59, 59).atZone(zone).toInstant().toEpochMilli()
+        
+        val aggregate = supplyEntryDao.getAggregateForVendorInRange(vendorId, start, end)
+        
         val invoiceId = UUID.randomUUID().toString()
-        val mockLiters = 50000 // In a real app, query SupplyEntryDao for this vendor and month
-        val mockDeliveries = 10
-        val mockRate = 600.0
+        val mockRate = 600.0 // FUTURE: Fetch from Vendor contract
         
         val invoice = Invoice(
             id = invoiceId,
@@ -61,15 +69,17 @@ class FirestoreInvoiceRepository @Inject constructor(
             vendorId = vendorId,
             vendorName = vendorName,
             billingMonth = month,
-            totalLiters = mockLiters,
-            deliveryCount = mockDeliveries,
-            totalAmount = mockDeliveries * mockRate,
+            totalLiters = aggregate.totalVolumeLiters.toInt(),
+            deliveryCount = aggregate.count,
+            totalAmount = aggregate.count * mockRate,
             status = InvoiceStatus.PENDING,
             dueDate = Instant.now().plus(7, ChronoUnit.DAYS),
             createdAt = Instant.now()
         )
         
-        collection.document(invoiceId).set(invoice.toFirestoreDto()).await()
+        if (aggregate.count > 0) {
+            collection.document(invoiceId).set(invoice.toFirestoreDto()).await()
+        }
         return invoice
     }
 

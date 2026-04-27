@@ -175,7 +175,7 @@ fun FirestoreSupplyEntryDto.toEntity(id: String): SupplyEntryEntity = SupplyEntr
 )
 
 fun FirebaseUser.toAppUser(
-    role: UserRole = UserRole.ADMIN,
+    role: UserRole = UserRole.SOCIETY_ADMIN,
     apartmentId: String,
     apartmentName: String?,
 ): AppUser = AppUser(
@@ -198,8 +198,14 @@ fun AppUser.toFirestoreDto(): FirestoreUserProfileDto = FirestoreUserProfileDto(
 )
 
 fun FirestoreUserProfileDto.toRole(): UserRole = when (role.uppercase()) {
-    "OPERATOR" -> UserRole.OPERATOR
-    else -> UserRole.ADMIN
+    "PLATFORM_OWNER" -> UserRole.PLATFORM_OWNER
+    "SOCIETY_ADMIN" -> UserRole.SOCIETY_ADMIN
+    "SECURITY_GUARD" -> UserRole.SECURITY_GUARD
+    "FACILITY_MANAGER" -> UserRole.FACILITY_MANAGER
+    // Legacy support
+    "ADMIN" -> UserRole.SOCIETY_ADMIN
+    "OPERATOR" -> UserRole.SECURITY_GUARD
+    else -> UserRole.SECURITY_GUARD
 }
 
 fun FirestoreApartmentDto.toDomain(id: String): ApartmentProfile = ApartmentProfile(
@@ -208,6 +214,7 @@ fun FirestoreApartmentDto.toDomain(id: String): ApartmentProfile = ApartmentProf
     createdByUserId = createdByUserId,
     subscriptionStatus = subscriptionStatus.ifBlank { "ACTIVE" },
     subscriptionExpiresAt = subscriptionExpiresAtEpochMillis?.let { Instant.ofEpochMilli(it) },
+    totalStorageCapacityLiters = totalStorageCapacityLiters,
 )
 
 fun FirestoreUserProfileDto.toAppUser(id: String): AppUser = AppUser(
@@ -233,10 +240,7 @@ fun FirestoreOperatorInviteDto.toDomain(id: String): OperatorInvite = OperatorIn
     id = id,
     apartmentId = apartmentId,
     email = email,
-    role = when (role.uppercase()) {
-        "ADMIN" -> UserRole.ADMIN
-        else -> UserRole.OPERATOR
-    },
+    role = try { UserRole.valueOf(role.uppercase()) } catch (e: Exception) { UserRole.SECURITY_GUARD },
     status = status,
     createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
     createdByUserId = createdByUserId,

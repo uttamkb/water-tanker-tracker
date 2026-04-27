@@ -26,19 +26,31 @@ class WorkManagerSyncManager @Inject constructor(
         .build()
 
     override fun startPeriodicSync() {
-        val periodicWorkRequest = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
+        val periodicSyncRequest = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .build()
 
         workManager.enqueueUniquePeriodicWork(
             SyncWorker.WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
-            periodicWorkRequest
+            periodicSyncRequest
+        )
+        
+        // Smart Forecasting Low-Water Alert Worker (Runs once a day)
+        val periodicLevelCheckRequest = PeriodicWorkRequestBuilder<WaterLevelWorker>(24, TimeUnit.HOURS)
+            .setConstraints(Constraints.Builder().build()) // No network required
+            .build()
+            
+        workManager.enqueueUniquePeriodicWork(
+            WaterLevelWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicLevelCheckRequest
         )
     }
 
     override fun stopPeriodicSync() {
         workManager.cancelUniqueWork(SyncWorker.WORK_NAME)
+        workManager.cancelUniqueWork(WaterLevelWorker.WORK_NAME)
     }
 
     override fun triggerImmediateSync() {

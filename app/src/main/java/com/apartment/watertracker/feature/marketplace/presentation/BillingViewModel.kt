@@ -20,6 +20,10 @@ import com.razorpay.Checkout
 import org.json.JSONObject
 import com.apartment.watertracker.core.payment.PaymentEventBus
 import com.apartment.watertracker.core.payment.PaymentResult
+import com.apartment.watertracker.domain.usecase.GenerateInvoicePdfUseCase
+import java.io.File
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 data class BillingUiState(
     val invoices: List<Invoice> = emptyList(),
@@ -32,11 +36,15 @@ data class BillingUiState(
 @HiltViewModel
 class BillingViewModel @Inject constructor(
     private val invoiceRepository: InvoiceRepository,
-    private val vendorRepository: VendorRepository
+    private val vendorRepository: VendorRepository,
+    private val generateInvoicePdfUseCase: GenerateInvoicePdfUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BillingUiState())
     val uiState: StateFlow<BillingUiState> = _uiState.asStateFlow()
+
+    private val _shareFileEvent = MutableSharedFlow<File>()
+    val shareFileEvent = _shareFileEvent.asSharedFlow()
 
     init {
         loadInvoices()
@@ -152,6 +160,18 @@ class BillingViewModel @Inject constructor(
                     showSuccessDialog = true,
                     successMessage = "Invoice marked as paid offline."
                 )
+            }
+        }
+    }
+
+    fun shareInvoice(invoice: Invoice) {
+        viewModelScope.launch {
+            try {
+                val file = generateInvoicePdfUseCase.execute(invoice)
+                _shareFileEvent.emit(file)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Handle error in UI
             }
         }
     }

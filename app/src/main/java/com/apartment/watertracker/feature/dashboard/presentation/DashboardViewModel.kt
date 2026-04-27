@@ -9,6 +9,8 @@ import com.apartment.watertracker.domain.repository.ApartmentRepository
 import com.apartment.watertracker.domain.repository.SupplyEntryRepository
 import com.apartment.watertracker.domain.repository.VendorRepository
 import com.apartment.watertracker.core.ui.state.UiState
+import com.apartment.watertracker.domain.usecase.GetSmartForecastUseCase
+import com.apartment.watertracker.domain.usecase.WaterForecast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.ZoneId
@@ -40,7 +42,7 @@ data class RecentDeliveryUiModel(
 data class DashboardUiState(
     val userName: String = "Apartment Staff",
     val apartmentName: String = "Apartment",
-    val userRole: UserRole = UserRole.OPERATOR,
+    val userRole: UserRole = UserRole.SECURITY_GUARD,
     val todayTankers: Int = 0,
     val monthTankers: Int = 0,
     val monthVolumeLiters: Long = 0,
@@ -50,7 +52,8 @@ data class DashboardUiState(
     val subscriptionActive: Boolean = true,
     val subscriptionLabel: String = "ACTIVE",
     val last7DaysData: List<DailyChartData> = emptyList(),
-    val recentDeliveries: List<RecentDeliveryUiModel> = emptyList()
+    val recentDeliveries: List<RecentDeliveryUiModel> = emptyList(),
+    val forecast: WaterForecast? = null
 )
 
 @HiltViewModel
@@ -59,6 +62,7 @@ class DashboardViewModel @Inject constructor(
     private val apartmentRepository: ApartmentRepository,
     private val vendorRepository: VendorRepository,
     private val supplyEntryRepository: SupplyEntryRepository,
+    private val getSmartForecastUseCase: GetSmartForecastUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<DashboardUiState>>(UiState.Loading)
@@ -105,10 +109,13 @@ class DashboardViewModel @Inject constructor(
                 val estimatedSpend = month.size * mockRatePerTanker
                 val avgPrice = if (totalVolume > 0) estimatedSpend / totalVolume else 0.0
 
+                val lastDateData = calculateLast7Days(recent)
+                val forecast = getSmartForecastUseCase.execute()
+
                 val state = DashboardUiState(
                     userName = user?.name ?: "Apartment Staff",
                     apartmentName = currentApartment?.name ?: user?.apartmentName ?: "Apartment",
-                    userRole = user?.role ?: UserRole.OPERATOR,
+                    userRole = user?.role ?: UserRole.SECURITY_GUARD,
                     todayTankers = today.size,
                     monthTankers = month.size,
                     monthVolumeLiters = totalVolume,
@@ -117,8 +124,9 @@ class DashboardViewModel @Inject constructor(
                     activeVendors = vendorList.count { it.isActive },
                     subscriptionActive = currentApartment?.isSubscriptionActive ?: true,
                     subscriptionLabel = currentApartment?.subscriptionStatus ?: "ACTIVE",
-                    last7DaysData = calculateLast7Days(recent),
-                    recentDeliveries = mapToRecentDeliveries(recent, vendorList)
+                    last7DaysData = lastDateData,
+                    recentDeliveries = mapToRecentDeliveries(recent, vendorList),
+                    forecast = forecast
                 )
                 UiState.Success(state)
             }

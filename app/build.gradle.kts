@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.apartment.watertracker"
+    namespace = "finsight.apartment.watertracker"
     compileSdk = 35
 
     defaultConfig {
@@ -81,6 +81,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.compiler)
 
     implementation(libs.androidx.room.runtime)

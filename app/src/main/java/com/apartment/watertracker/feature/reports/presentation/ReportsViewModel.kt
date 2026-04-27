@@ -5,13 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.apartment.watertracker.domain.model.Vendor
 import com.apartment.watertracker.domain.repository.SupplyEntryRepository
 import com.apartment.watertracker.domain.repository.VendorRepository
+import com.apartment.watertracker.domain.usecase.GenerateAuditLogCsvUseCase
+import com.apartment.watertracker.domain.usecase.GeneratePdfReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -54,11 +59,15 @@ data class ReportsUiState(
 class ReportsViewModel @Inject constructor(
     private val vendorRepository: VendorRepository,
     private val supplyEntryRepository: SupplyEntryRepository,
-    private val generatePdfReportUseCase: com.apartment.watertracker.domain.usecase.GeneratePdfReportUseCase
+    private val generatePdfReportUseCase: GeneratePdfReportUseCase,
+    private val generateAuditLogCsvUseCase: GenerateAuditLogCsvUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReportsUiState())
     val uiState: StateFlow<ReportsUiState> = _uiState.asStateFlow()
+
+    private val _shareFileEvent = MutableSharedFlow<File>()
+    val shareFileEvent = _shareFileEvent.asSharedFlow()
 
     init {
         val now = LocalDate.now()
@@ -130,46 +139,41 @@ class ReportsViewModel @Inject constructor(
         }.filter { it.tankerCount > 0 }
     }
 
-    suspend fun generateCsvData(): String {
-        _uiState.update { it.copy(isExporting = true, exportMessage = null) }
-        try {
-            val now = LocalDate.now()
-            val entries = supplyEntryRepository.observeEntriesForMonth(now.year, now.monthValue).first()
-            val vendors = vendorRepository.observeVendors().first()
-            val vendorMap = vendors.associateBy { it.id }
-
-            val sb = StringBuilder()
-            // Header
-            sb.append("Date,Time,Vendor,Vehicle Number,Volume (L),Hardness (PPM),Is Duplicate,Remarks\n")
-            
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd,HH:mm:ss").withZone(ZoneId.systemDefault())
-
-            entries.sortedBy { it.capturedAt }.forEach { entry ->
-                val vendorName = vendorMap[entry.vendorId]?.supplierName?.replace(",", " ") ?: "Unknown Vendor"
-                val dateTime = formatter.format(entry.capturedAt)
-                val vehicle = entry.vehicleNumber?.replace(",", " ") ?: ""
-                val remarks = entry.remarks?.replace(",", " ") ?: ""
-                
-                sb.append("$dateTime,$vendorName,$vehicle,${entry.volumeLiters},${entry.hardnessPpm},${entry.duplicateFlag},$remarks\n")
+    fun exportCsv() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExporting = true, exportMessage = null) }
+            try {
+                val now = LocalDate.now()
+                val entries = supplyEntryRepository.observeEntriesForMonth(now.year, now.monthValue).first()
+                val file = generateAuditLogCsvUseCase.execute(entries, "${now.year}-${now.monthValue}")
+                _shareFileEvent.emit(file)
+                _uiState.update { it.copy(isExporting = false, exportMessage = "CSV Generated") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isExporting = false, exportMessage = "Export failed: ${e.message}") }
             }
-            
-            _uiState.update { it.copy(isExporting = false, exportMessage = "Export generated successfully") }
-            return sb.toString()
-        } catch (e: Exception) {
-            _uiState.update { it.copy(isExporting = false, exportMessage = "Export failed: ${e.message}") }
-            return ""
         }
     }
     
-    suspend fun generatePdfData(): java.io.File? {
-        val state = _uiState.value
-        return generatePdfReportUseCase.execute(
-            monthLabel = state.monthLabel,
-            totalTankers = state.totalTankers,
-            totalVolumeLiters = state.totalVolumeLiters,
-            vendorSummaries = state.vendorSummaries,
-            dailyEntries = state.dailyEntries
-        )
+    fun exportPdf() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExporting = true, exportMessage = null) }
+            try {
+                val state = _uiState.value
+                val file = generatePdfReportUseCase.execute(
+                    monthLabel = state.monthLabel,
+                    totalTankers = state.totalTankers,
+                    totalVolumeLiters = state.totalVolumeLiters,
+                    vendorSummaries = state.vendorSummaries,
+                    dailyEntries = state.dailyEntries
+                )
+                if (file != null) {
+                    _shareFileEvent.emit(file)
+                    _uiState.update { it.copy(isExporting = false, exportMessage = "PDF Generated") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isExporting = false, exportMessage = "Export failed: ${e.message}") }
+            }
+        }
     }
     
     fun clearExportMessage() {

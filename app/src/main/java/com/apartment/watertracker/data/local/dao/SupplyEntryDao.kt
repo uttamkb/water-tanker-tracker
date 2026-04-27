@@ -43,6 +43,20 @@ interface SupplyEntryDao {
     @Query("SELECT * FROM supply_entries WHERE isSynced = 0")
     suspend fun getPendingEntries(): List<SupplyEntryEntity>
 
+    data class DeliveryAggregate(
+        val count: Int,
+        val totalVolumeLiters: Long
+    )
+
+    @Query(
+        """
+        SELECT COUNT(*) as count, COALESCE(SUM(volumeLiters), 0) as totalVolumeLiters
+        FROM supply_entries
+        WHERE vendorId = :vendorId AND capturedAtEpochMillis BETWEEN :startInclusive AND :endInclusive
+        """
+    )
+    suspend fun getAggregateForVendorInRange(vendorId: String, startInclusive: Long, endInclusive: Long): DeliveryAggregate
+
     data class VendorRatingAggregate(
         val vendorId: String,
         val avgQuality: Float,
@@ -64,6 +78,22 @@ interface SupplyEntryDao {
         """
     )
     fun observeVendorRatings(): Flow<List<VendorRatingAggregate>>
+
+    @Query(
+        """
+        SELECT DATE(capturedAtEpochMillis / 1000, 'unixepoch') as date, SUM(volumeLiters) as volume
+        FROM supply_entries
+        WHERE capturedAtEpochMillis >= :sinceMillis
+        GROUP BY date
+        ORDER BY date ASC
+        """
+    )
+    suspend fun getDailyVolumes(sinceMillis: Long): List<DailyVolume>
+
+    data class DailyVolume(
+        val date: String,
+        val volume: Long
+    )
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entry: SupplyEntryEntity)

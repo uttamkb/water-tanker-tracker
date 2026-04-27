@@ -51,7 +51,7 @@ class FirebaseAuthRepository @Inject constructor(
                     val profile = snapshot.toObject(FirestoreUserProfileDto::class.java)
                     trySend(
                         firebaseUser.toAppUser(
-                            role = profile?.toRole() ?: UserRole.ADMIN,
+                            role = profile?.toRole() ?: UserRole.SOCIETY_ADMIN,
                             apartmentId = profile?.apartmentId?.ifBlank { firebaseUser.uid } ?: firebaseUser.uid,
                             apartmentName = profile?.apartmentName ?: "${firebaseUser.displayName ?: "Apartment"} Space",
                         ),
@@ -130,7 +130,7 @@ class FirebaseAuthRepository @Inject constructor(
         }
 
         val appUser = firebaseUser.toAppUser(
-            role = existingProfile?.toRole() ?: UserRole.ADMIN,
+            role = existingProfile?.toRole() ?: UserRole.SOCIETY_ADMIN,
             apartmentId = existingProfile?.apartmentId?.ifBlank { firebaseUser.uid } ?: firebaseUser.uid,
             apartmentName = existingProfile?.apartmentName ?: "${firebaseUser.displayName ?: "Apartment"} Space",
         ).copy(fcmTokens = existingProfile?.fcmTokens ?: emptyList())

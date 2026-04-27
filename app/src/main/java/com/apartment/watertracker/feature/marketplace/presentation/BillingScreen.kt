@@ -15,7 +15,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,9 +51,26 @@ fun BillingScreen(
     onBackClick: () -> Unit,
     viewModel: BillingViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val formatter = DateTimeFormatter.ofPattern("dd MMM, yyyy")
     val activityContext = androidx.activity.compose.LocalActivity.current
+
+    LaunchedEffect(Unit) {
+        viewModel.shareFileEvent.collect { file ->
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(intent, "Share Invoice PDF"))
+        }
+    }
 
     if (uiState.showSuccessDialog) {
         AlertDialog(
@@ -148,6 +173,9 @@ fun BillingScreen(
                         },
                         onMarkPaidOffline = {
                             viewModel.initiateOfflinePayment(invoice)
+                        },
+                        onShareClick = {
+                            viewModel.shareInvoice(invoice)
                         }
                     )
                 }
@@ -161,7 +189,8 @@ private fun InvoiceItem(
     invoice: Invoice,
     formatter: DateTimeFormatter,
     onPayClick: () -> Unit,
-    onMarkPaidOffline: () -> Unit
+    onMarkPaidOffline: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     PremiumCard {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -172,8 +201,16 @@ private fun InvoiceItem(
                 Text(
                     text = invoice.vendorName,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = onShareClick) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = "Share",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Text(
                     text = "₹${invoice.totalAmount.toInt()}",
                     style = MaterialTheme.typography.titleLarge,

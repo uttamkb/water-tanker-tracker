@@ -10,6 +10,7 @@ interface SupplyEntryRepository {
     fun observeRecentEntries(limit: Int): Flow<List<SupplyEntry>>
     fun observeEntryById(entryId: String): Flow<SupplyEntry?>
     fun observeVendorRatings(): Flow<Map<String, VendorRating>>
+    suspend fun getDailyVolumes(sinceMillis: Long): List<Pair<String, Long>>
     suspend fun getLatestEntryForVendor(vendorId: String): SupplyEntry?
     suspend fun refreshEntriesForMonth(year: Int, month: Int)
     suspend fun refreshTodayEntries()

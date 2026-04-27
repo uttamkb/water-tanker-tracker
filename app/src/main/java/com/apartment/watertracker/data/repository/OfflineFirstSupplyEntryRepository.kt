@@ -80,6 +80,9 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
     override suspend fun getLatestEntryForVendor(vendorId: String): SupplyEntry? =
         supplyEntryDao.getLatestForVendor(vendorId)?.toDomain()
 
+    override suspend fun getDailyVolumes(sinceMillis: Long): List<Pair<String, Long>> =
+        supplyEntryDao.getDailyVolumes(sinceMillis).map { it.date to it.volume }
+
     override suspend fun refreshEntriesForMonth(year: Int, month: Int) {
         val zone = ZoneId.systemDefault()
         val start = LocalDate.of(year, month, 1).atStartOfDay(zone).toInstant().toEpochMilli()

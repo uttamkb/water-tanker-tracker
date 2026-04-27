@@ -216,7 +216,7 @@ class FirestoreApartmentRepository @Inject constructor(
             id = UUID.randomUUID().toString(),
             apartmentId = apartmentId,
             email = email,
-            role = UserRole.OPERATOR,
+            role = UserRole.SECURITY_GUARD,
             status = "PENDING",
             createdAt = Instant.now(),
             createdByUserId = currentUserId,

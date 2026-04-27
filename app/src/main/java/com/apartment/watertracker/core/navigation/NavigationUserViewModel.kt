@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class NavigationUserState(
-    val isOperator: Boolean = false,
+    val role: UserRole? = null,
 )
 
 @HiltViewModel
@@ -29,7 +29,7 @@ class NavigationUserViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser.collectLatest { user ->
                 _uiState.update {
-                    it.copy(isOperator = user?.role == UserRole.OPERATOR)
+                    it.copy(role = user?.role)
                 }
             }
         }
