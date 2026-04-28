@@ -19,24 +19,24 @@ This file tracks the progress of the WaterTracker development and release.
 ## 🚀 Phase 5: Production Release Planning [UP NEXT]
 *Goal: Secure, sign, and publish the application to the Google Play Store.*
 
-### 🔑 Epic 12: Security & Signing
-- [ ] **Task 12.1: Production Keystore Generation**
-    - [ ] Create a `release.keystore` file securely.
-    - [ ] Configure `signingConfigs` in `app/build.gradle.kts`.
-    - [ ] Store credentials in `local.properties` (non-git).
-- [ ] **Task 12.2: ProGuard/R8 Hardening**
-    - [ ] Enable `isMinifyEnabled = true` for release build.
-    - [ ] Test release build for common reflection crashes (Hilt/Room).
+### 🔑 Epic 12: Security & Signing [DONE]
+- [x] **Task 12.1: Production Keystore Generation**
+    - [x] Create a `release.keystore` file securely.
+    - [x] Configure `signingConfigs` in `app/build.gradle.kts`.
+    - [x] Store credentials in `local.properties` (non-git).
+- [x] **Task 12.2: ProGuard/R8 Hardening**
+    - [x] Enable `isMinifyEnabled = true` for release build.
+    - [x] Test release build for common reflection crashes (Hilt/Room).
 
-### ☁️ Epic 13: Firebase Production Setup
-- [ ] **Task 13.1: Release Fingerprints**
-    - [ ] Extract SHA-1/SHA-256 from production keystore.
-    - [ ] Add fingerprints to Firebase Console.
-- [ ] **Task 13.2: Firestore/Storage Rules Audit**
-    - [ ] Verify multi-tenant isolation rules.
-    - [ ] Ensure public access is completely disabled.
+### ☁️ Epic 13: Firebase Production Setup [DONE]
+- [x] **Task 13.1: Release Fingerprints**
+    - [x] Extract SHA-1/SHA-256 from production keystore.
+    - [x] Add fingerprints to Firebase Console.
+- [x] **Task 13.2: Firestore/Storage Rules Audit**
+    - [x] Verify multi-tenant isolation rules.
+    - [x] Ensure public access is completely disabled.
 
-### 📱 Epic 14: Play Store Listing & Compliance
+### 📱 Epic 14: Play Store Listing & Compliance [IN PROGRESS]
 - [ ] **Task 14.1: Store Assets**
     - [ ] High-res App Icon (512x512).
     - [ ] Feature Graphic (1024x500).
@@ -44,9 +44,9 @@ This file tracks the progress of the WaterTracker development and release.
 - [ ] **Task 14.2: Legal & Privacy**
     - [ ] Draft Privacy Policy focusing on Camera & Location usage.
     - [ ] Fill out "Data Safety" questionnaire in Play Console.
-- [ ] **Task 14.3: App Bundle Generation**
-    - [ ] Run `./gradlew bundleRelease`.
-    - [ ] Verify AAB size and contents.
+- [x] **Task 14.3: App Bundle Generation**
+    - [x] Run `./gradlew bundleRelease`.
+    - [x] Verify AAB size and contents.
 
 ### 🧪 Epic 15: Internal Testing & Rollout
 - [ ] **Task 15.1: Internal Testing Track**
