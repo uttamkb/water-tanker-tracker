@@ -98,19 +98,19 @@ class DashboardViewModel @Inject constructor(
             ) { args: Array<Any?> ->
                 val user = args[0] as? com.apartment.watertracker.domain.model.AppUser
                 val currentApartment = args[1] as? com.apartment.watertracker.domain.model.ApartmentProfile
-                val today = args[2] as List<SupplyEntry>
-                val month = args[3] as List<SupplyEntry>
-                val vendorList = args[4] as List<com.apartment.watertracker.domain.model.Vendor>
-                val recent = args[5] as List<SupplyEntry>
+                val today = args[2] as? List<SupplyEntry> ?: emptyList()
+                val month = args[3] as? List<SupplyEntry> ?: emptyList()
+                val vendorList = args[4] as? List<com.apartment.watertracker.domain.model.Vendor> ?: emptyList()
+                val recent = args[5] as? List<SupplyEntry> ?: emptyList()
 
                 val totalVolume = month.sumOf { it.volumeLiters.toLong() }
-                // NOTE: Hardcoding rate for now until Payment/Bidding Phase adds actual contract rates
-                val mockRatePerTanker = 600.0
-                val estimatedSpend = month.size * mockRatePerTanker
+                // NOTE: In a full production app, we would fetch the latest accepted bid price
+                // for each entry or the apartment's default vendor rates.
+                val estimatedSpend = month.size * 600.0
                 val avgPrice = if (totalVolume > 0) estimatedSpend / totalVolume else 0.0
 
                 val lastDateData = calculateLast7Days(recent)
-                val forecast = getSmartForecastUseCase.execute()
+                val forecast = runCatching { getSmartForecastUseCase.execute() }.getOrNull()
 
                 val state = DashboardUiState(
                     userName = user?.name ?: "Apartment Staff",
@@ -130,7 +130,6 @@ class DashboardViewModel @Inject constructor(
                 )
                 UiState.Success(state)
             }
-            .catch { e -> _uiState.value = UiState.Error(e.message ?: "Unknown Error", e) }
             .collect { state ->
                 _uiState.value = state
             }

@@ -1,5 +1,6 @@
 package com.apartment.watertracker.data.repository
 
+import android.util.Log
 import com.apartment.watertracker.data.remote.mapper.toAppUser
 import com.apartment.watertracker.data.remote.mapper.toDomain
 import com.apartment.watertracker.data.remote.mapper.toFirestoreDto
@@ -32,7 +33,9 @@ class FirestoreApartmentRepository @Inject constructor(
 ) : ApartmentRepository {
 
     override fun observeCurrentApartment(): Flow<ApartmentProfile?> = callbackFlow {
-        val apartmentId = runCatching { apartmentScopeProvider.getApartmentId() }.getOrNull()
+        val apartmentId = runCatching { apartmentScopeProvider.getApartmentId() }
+            .onFailure { e -> Log.e("ApartmentRepo", "Failed to get apartment ID", e) }
+            .getOrNull()
         if (apartmentId == null) {
             trySend(null)
             close()
@@ -93,7 +96,9 @@ class FirestoreApartmentRepository @Inject constructor(
     }
 
     override fun observeApartmentUsers(): Flow<List<AppUser>> = callbackFlow {
-        val apartmentId = runCatching { apartmentScopeProvider.getApartmentId() }.getOrNull()
+        val apartmentId = runCatching { apartmentScopeProvider.getApartmentId() }
+            .onFailure { e -> Log.e("ApartmentRepo", "Failed to get apartment ID", e) }
+            .getOrNull()
         if (apartmentId == null) {
             trySend(emptyList())
             close()
@@ -117,7 +122,9 @@ class FirestoreApartmentRepository @Inject constructor(
     }
 
     override fun observeOperatorInvites(): Flow<List<OperatorInvite>> = callbackFlow {
-        val apartmentId = runCatching { apartmentScopeProvider.getApartmentId() }.getOrNull()
+        val apartmentId = runCatching { apartmentScopeProvider.getApartmentId() }
+            .onFailure { e -> Log.e("ApartmentRepo", "Failed to get apartment ID", e) }
+            .getOrNull()
         if (apartmentId == null) {
             trySend(emptyList())
             close()

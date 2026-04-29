@@ -1,5 +1,6 @@
 package com.apartment.watertracker.data.repository
 
+import android.util.Log
 import com.apartment.watertracker.data.local.dao.SupplyEntryDao
 import com.apartment.watertracker.data.local.mapper.toDomain
 import com.apartment.watertracker.data.local.mapper.toEntity as toLocalEntity
@@ -118,6 +119,8 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
             }.forEach { entity ->
                 supplyEntryDao.upsert(entity)
             }
+        }.onFailure { e ->
+            Log.e("SupplyEntryRepo", "Failed to refresh recent entries", e)
         }
     }
 
@@ -134,9 +137,9 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
             
             // If successful, mark as synced
             supplyEntryDao.upsert(pendingEntry.copy(isSynced = true).toLocalEntity())
-        }.onFailure {
+        }.onFailure { e ->
             // Background sync worker will pick this up later since isSynced = false
-            it.printStackTrace()
+            Log.e("SupplyEntryRepo", "Initial sync failed for entry ${pendingEntry.id}. Will retry in background.", e)
         }
     }
 
@@ -151,8 +154,8 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
                     .set(entity.toFirestoreDto())
                     .awaitResult()
                 supplyEntryDao.upsert(entity.copy(isSynced = true))
-            }.onFailure {
-                it.printStackTrace()
+            }.onFailure { e ->
+                Log.e("SupplyEntryRepo", "Periodic sync failed for entry ${entity.id}", e)
             }
         }
     }
@@ -171,6 +174,8 @@ class OfflineFirstSupplyEntryRepository @Inject constructor(
             }.forEach { entity ->
                 supplyEntryDao.upsert(entity)
             }
+        }.onFailure { e ->
+            Log.e("SupplyEntryRepo", "Failed to refresh entries in range $start - $end", e)
         }
     }
 

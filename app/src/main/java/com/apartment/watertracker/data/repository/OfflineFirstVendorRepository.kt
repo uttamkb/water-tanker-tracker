@@ -1,5 +1,6 @@
 package com.apartment.watertracker.data.repository
 
+import android.util.Log
 import com.apartment.watertracker.data.local.dao.VendorDao
 import com.apartment.watertracker.data.local.entity.VendorEntity
 import com.apartment.watertracker.data.local.mapper.toDomain
@@ -40,6 +41,8 @@ class OfflineFirstVendorRepository @Inject constructor(
             vendorsCollection.document(vendor.id)
                 .set(vendor.toLocalEntity().toFirestoreDto())
                 .awaitResult()
+        }.onFailure { e ->
+            Log.e("VendorRepo", "Failed to sync vendor ${vendor.id}", e)
         }
     }
 
@@ -48,6 +51,8 @@ class OfflineFirstVendorRepository @Inject constructor(
         val vendorsCollection = vendorsCollection()
         runCatching {
             vendorsCollection.document(vendorId).delete().awaitResult()
+        }.onFailure { e ->
+            Log.e("VendorRepo", "Failed to delete vendor $vendorId", e)
         }
     }
 
@@ -62,6 +67,8 @@ class OfflineFirstVendorRepository @Inject constructor(
             if (remoteVendors.isNotEmpty()) {
                 vendorDao.upsertAll(remoteVendors)
             }
+        }.onFailure { e ->
+            Log.e("VendorRepo", "Failed to refresh vendors", e)
         }
     }
 

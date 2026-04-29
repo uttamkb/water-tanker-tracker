@@ -1,5 +1,6 @@
 package com.apartment.watertracker.data.repository
 
+import android.util.Log
 import com.apartment.watertracker.data.local.dao.DeliveryDao
 import com.apartment.watertracker.data.local.entity.DeliveryEntity
 import com.apartment.watertracker.data.local.mapper.toDomain
@@ -71,6 +72,8 @@ class OfflineFirstDeliveryRepository @Inject constructor(
             deliveriesCollection.document(scopedDelivery.id)
                 .set(scopedDelivery.toLocalEntity().toFirestoreDto())
                 .awaitResult()
+        }.onFailure { e ->
+            Log.e("DeliveryRepo", "Failed to sync delivery ${scopedDelivery.id}", e)
         }
     }
 
@@ -79,6 +82,8 @@ class OfflineFirstDeliveryRepository @Inject constructor(
         val deliveriesCollection = deliveriesCollection()
         runCatching {
             deliveriesCollection.document(deliveryId).delete().awaitResult()
+        }.onFailure { e ->
+            Log.e("DeliveryRepo", "Failed to delete delivery $deliveryId", e)
         }
     }
 
@@ -93,6 +98,8 @@ class OfflineFirstDeliveryRepository @Inject constructor(
             if (remoteDeliveries.isNotEmpty()) {
                 deliveryDao.upsertAll(remoteDeliveries)
             }
+        }.onFailure { e ->
+            Log.e("DeliveryRepo", "Failed to refresh deliveries", e)
         }
     }
 

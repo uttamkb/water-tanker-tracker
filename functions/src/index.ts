@@ -12,8 +12,9 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 
-// IMPORTANT: Set these in your Firebase environment variables later!
-const RAZORPAY_WEBHOOK_SECRET = "your_webhook_secret_from_razorpay";
+// Retrieval of secrets from environment variables
+// Use `firebase functions:config:set razorpay.secret="your_secret"` to set this in production
+const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_SECRET || "your_webhook_secret_from_razorpay";
 
 export const razorpayWebhook = onRequest(async (req, res) => {
   // 1. Verify the webhook signature

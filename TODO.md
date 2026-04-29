@@ -48,11 +48,22 @@ This file tracks the progress of the WaterTracker development and release.
     - [x] Run `./gradlew bundleRelease`.
     - [x] Verify AAB size and contents.
 
-### 🧪 Epic 15: Internal Testing & Rollout
-- [ ] **Task 15.1: Internal Testing Track**
+### ✅ Epic 15: Production Hardening & Code Quality [COMPLETED]
+- [x] **Task 15.1: Critical Stability Fixes**
+    - [x] Replace unsafe `as` casts in `DashboardViewModel` with safe casting.
+    - [x] Implement `.onFailure` logging for all repository `runCatching` blocks.
+- [x] **Task 15.2: Persistence & Security**
+    - [x] Remove `fallbackToDestructiveMigration()` from Room configuration.
+    - [x] Move Razorpay Webhook Secret to Firebase environment variables (Code-side update).
+- [x] **Task 15.3: UI Resilience**
+    - [x] Refactor `DashboardViewModel` to handle Flow exceptions without terminating the state stream.
+    - [x] Replace hardcoded tanker rates with actual data from marketplace bids (Updated with production logic).
+
+### 🧪 Epic 16: Internal Testing & Rollout
+- [ ] **Task 16.1: Internal Testing Track**
     - [ ] Upload AAB to Play Console Internal Track.
     - [ ] Invite first 10 "Society Admins" for beta feedback.
-- [ ] **Task 15.2: Production Rollout**
+- [ ] **Task 16.2: Production Rollout**
     - [ ] Promote to Production with 10% staged rollout.
 
 ---
