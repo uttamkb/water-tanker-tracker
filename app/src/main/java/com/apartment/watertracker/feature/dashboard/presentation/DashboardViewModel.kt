@@ -98,9 +98,14 @@ class DashboardViewModel @Inject constructor(
             ) { args: Array<Any?> ->
                 val user = args[0] as? com.apartment.watertracker.domain.model.AppUser
                 val currentApartment = args[1] as? com.apartment.watertracker.domain.model.ApartmentProfile
+                
+                @Suppress("UNCHECKED_CAST")
                 val today = args[2] as? List<SupplyEntry> ?: emptyList()
+                @Suppress("UNCHECKED_CAST")
                 val month = args[3] as? List<SupplyEntry> ?: emptyList()
+                @Suppress("UNCHECKED_CAST")
                 val vendorList = args[4] as? List<com.apartment.watertracker.domain.model.Vendor> ?: emptyList()
+                @Suppress("UNCHECKED_CAST")
                 val recent = args[5] as? List<SupplyEntry> ?: emptyList()
 
                 val totalVolume = month.sumOf { it.volumeLiters.toLong() }
