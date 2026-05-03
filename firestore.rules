@@ -30,7 +30,7 @@ service cloud.firestore {
     }
 
     function isApartmentAdmin(apartmentId) {
-      return isApartmentMember(apartmentId) && userRole() == "ADMIN";
+      return isApartmentMember(apartmentId) && (userRole() == "ADMIN" || userRole() == "SOCIETY_ADMIN" || userRole() == "FACILITY_MANAGER");
     }
 
     match /users/{userId} {
@@ -47,10 +47,10 @@ service cloud.firestore {
           "email",
           "role",
           "apartmentId",
-          "apartmentName"
+          "apartmentName",
+          "fcmTokens"
         ])
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.role == "ADMIN"
         && request.resource.data.apartmentId == request.auth.uid;
 
       allow update: if signedIn()
@@ -68,7 +68,8 @@ service cloud.firestore {
               "email",
               "role",
               "apartmentId",
-              "apartmentName"
+              "apartmentName",
+              "fcmTokens"
             ])
           )
         );
