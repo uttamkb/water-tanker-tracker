@@ -67,6 +67,7 @@ import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.platform.testTag
 import com.apartment.watertracker.core.ui.components.PremiumCard
 import com.apartment.watertracker.core.ui.components.shimmerEffect
 
@@ -86,9 +87,42 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiStateWrapper = viewModel.uiState.collectAsStateWithLifecycle().value
-    val context = LocalContext.current
     
+    StatelessDashboardContent(
+        uiStateWrapper = uiStateWrapper,
+        onRefresh = { viewModel.refresh() },
+        onScanClick = onScanClick,
+        onVendorsClick = onVendorsClick,
+        onReportsClick = onReportsClick,
+        onAnalyticsClick = onAnalyticsClick,
+        onRequestTankerClick = onRequestTankerClick,
+        onBillingClick = onBillingClick,
+        onApartmentSetupClick = onApartmentSetupClick,
+        onApartmentSwitchClick = onApartmentSwitchClick,
+        onApartmentAdminClick = onApartmentAdminClick,
+        onTeamClick = onTeamClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatelessDashboardContent(
+    uiStateWrapper: UiState<DashboardUiState>,
+    onRefresh: () -> Unit,
+    onScanClick: () -> Unit,
+    onVendorsClick: () -> Unit,
+    onReportsClick: () -> Unit,
+    onAnalyticsClick: () -> Unit,
+    onRequestTankerClick: () -> Unit,
+    onBillingClick: () -> Unit,
+    onApartmentSetupClick: () -> Unit,
+    onApartmentSwitchClick: () -> Unit,
+    onApartmentAdminClick: () -> Unit,
+    onTeamClick: () -> Unit,
+) {
+    val context = LocalContext.current
     val uiState = (uiStateWrapper as? UiState.Success)?.data ?: DashboardUiState()
+
     
     val allActions = listOf(
         DashboardAction(
@@ -159,7 +193,7 @@ fun DashboardScreen(
         
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = { viewModel.refresh() },
+            onRefresh = onRefresh,
             modifier = Modifier.padding(paddingValues)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -702,7 +736,8 @@ private fun ActionGrid(actions: List<DashboardAction>) {
         columns = GridCells.Fixed(2),
         modifier = Modifier
             .fillMaxWidth()
-            .height(gridHeightFor(actions.size)),
+            .height(gridHeightFor(actions.size))
+            .testTag("action_grid"),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         userScrollEnabled = false,
@@ -716,7 +751,9 @@ private fun ActionGrid(actions: List<DashboardAction>) {
 @Composable
 private fun ActionCard(action: DashboardAction) {
     PremiumCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("action_card_${action.title.replace(" ", "_").lowercase()}"),
         onClick = action.onClick,
         containerColor = MaterialTheme.colorScheme.surface
     ) {

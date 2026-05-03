@@ -49,7 +49,7 @@ object DatabaseModule {
             context,
             WaterTrackerDatabase::class.java,
             "water-tracker.db",
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides

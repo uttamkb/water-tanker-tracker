@@ -15,5 +15,5 @@ interface ApartmentRepository {
     suspend fun createApartment(name: String)
     suspend fun switchApartment(apartmentId: String)
     suspend fun updateSubscription(apartmentId: String, status: String, expiresAtEpochMillis: Long?)
-    suspend fun createOperatorInvite(email: String)
+    suspend fun createOperatorInvite(email: String, role: com.apartment.watertracker.domain.model.UserRole)
 }

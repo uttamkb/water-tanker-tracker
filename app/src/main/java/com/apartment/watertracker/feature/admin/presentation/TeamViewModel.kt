@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apartment.watertracker.domain.model.AppUser
 import com.apartment.watertracker.domain.model.OperatorInvite
+import com.apartment.watertracker.domain.model.UserRole
 import com.apartment.watertracker.domain.repository.ApartmentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 
 data class TeamUiState(
     val inviteEmail: String = "",
+    val selectedRole: UserRole = UserRole.SECURITY_GUARD,
     val users: List<AppUser> = emptyList(),
     val invites: List<OperatorInvite> = emptyList(),
     val isSaving: Boolean = false,
@@ -47,14 +49,19 @@ class TeamViewModel @Inject constructor(
         _uiState.update { it.copy(inviteEmail = value, message = null) }
     }
 
+    fun updateSelectedRole(role: UserRole) {
+        _uiState.update { it.copy(selectedRole = role, message = null) }
+    }
+
     fun createInvite() {
-        val email = _uiState.value.inviteEmail.trim()
+        val state = _uiState.value
+        val email = state.inviteEmail.trim()
         if (email.isBlank()) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, message = null) }
             runCatching {
-                apartmentRepository.createOperatorInvite(email)
+                apartmentRepository.createOperatorInvite(email, state.selectedRole)
             }.onSuccess {
                 _uiState.update {
                     it.copy(

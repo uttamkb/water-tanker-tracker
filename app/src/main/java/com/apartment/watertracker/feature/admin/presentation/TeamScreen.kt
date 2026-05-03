@@ -25,12 +25,14 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import com.apartment.watertracker.domain.model.UserRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -93,6 +95,30 @@ fun TeamScreen(
                                 Icon(imageVector = Icons.Outlined.Email, contentDescription = null)
                             }
                         )
+                        
+                        Text(
+                            text = "Assign Role",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = uiState.selectedRole == UserRole.SECURITY_GUARD,
+                                onClick = { viewModel.updateSelectedRole(UserRole.SECURITY_GUARD) },
+                                label = { Text("Security Guard") },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = uiState.selectedRole == UserRole.FACILITY_MANAGER,
+                                onClick = { viewModel.updateSelectedRole(UserRole.FACILITY_MANAGER) },
+                                label = { Text("Facility Manager") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
                         Button(
                             modifier = Modifier.fillMaxWidth().height(50.dp),
                             onClick = viewModel::createInvite,

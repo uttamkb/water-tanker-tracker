@@ -59,11 +59,19 @@ This file tracks the progress of the WaterTracker development and release.
     - [x] Refactor `DashboardViewModel` to handle Flow exceptions without terminating the state stream.
     - [x] Replace hardcoded tanker rates with actual data from marketplace bids (Updated with production logic).
 
-### 🧪 Epic 16: Internal Testing & Rollout
-- [ ] **Task 16.1: Internal Testing Track**
+### 🧪 Epic 16: Pre-Release Testing [IN PROGRESS]
+- [ ] **Task 16.1: Full Feature Audit**
+    - [ ] Complete all items in `TESTING_CHECKLIST.md`.
+    - [ ] Verify UI consistency on physical devices.
+- [ ] **Task 16.2: Final Stability Pass**
+    - [ ] Perform "Monkey Test" (Stress test UI taps).
+    - [ ] Verify zero crashes in Logcat during standard journeys.
+
+### 🚀 Epic 17: Play Store Listing & Rollout
+- [ ] **Task 17.1: Internal Testing Track**
     - [ ] Upload AAB to Play Console Internal Track.
     - [ ] Invite first 10 "Society Admins" for beta feedback.
-- [ ] **Task 16.2: Production Rollout**
+- [ ] **Task 17.2: Production Rollout**
     - [ ] Promote to Production with 10% staged rollout.
 
 ---

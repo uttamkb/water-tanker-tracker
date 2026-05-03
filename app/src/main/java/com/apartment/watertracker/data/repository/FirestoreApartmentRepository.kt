@@ -216,14 +216,14 @@ class FirestoreApartmentRepository @Inject constructor(
             .awaitResult()
     }
 
-    override suspend fun createOperatorInvite(email: String) {
+    override suspend fun createOperatorInvite(email: String, role: UserRole) {
         val apartmentId = apartmentScopeProvider.getApartmentId()
         val currentUserId = firebaseAuth.currentUser?.uid ?: return
         val invite = OperatorInvite(
             id = UUID.randomUUID().toString(),
             apartmentId = apartmentId,
             email = email,
-            role = UserRole.SECURITY_GUARD,
+            role = role,
             status = "PENDING",
             createdAt = Instant.now(),
             createdByUserId = currentUserId,
